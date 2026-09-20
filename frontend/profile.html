@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>회원정보 · TLJ</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="js/common.js"></script>
+  <script defer src="js/profile.js"></script>
+</head>
+<body data-mode="member">
+  <main class="login-screen">
+    <section id="profilePanel" class="login-card" hidden>
+      <span class="logo">T</span>
+      <h1>회원정보</h1>
+      <p class="muted">매장에서 사용할 이름을 변경하세요.</p>
+      <form id="profileForm">
+        <label>회원번호<input id="profileCode" readonly aria-readonly="true"></label>
+        <label>이름<input id="profileName" maxlength="30" autocomplete="name" required></label>
+        <p id="profileError" role="alert"></p>
+        <p id="profileStatus" role="status"></p>
+        <div class="login-actions"><button id="saveProfile" type="submit" class="primary" disabled>변경 저장</button></div>
+      </form>
+      <a class="guest-link" href="cake.html">게시판으로 돌아가기</a>
+    </section>
+  </main>
+  <div id="toast" role="status" hidden></div>
+</body>
+</html>

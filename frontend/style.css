@@ -5,3 +5,28 @@
 @media print{#appShell,#loginScreen{display:none!important}}
 .print-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 @media print{#printArticle{font-size:16px!important}#detailTitle{font-size:22px!important}#detailMeta{font-size:12px!important}#printArticle.large{font-size:22px!important}#printArticle.large #detailTitle{font-size:28px!important}#printArticle.large #detailMeta{font-size:16px!important}}
+.account-actions{display:flex;align-items:center;gap:10px}.profile-link{font-size:12px;color:var(--green);white-space:nowrap}#profileError{color:#aa3227;font-size:13px}#profileStatus{color:var(--green);font-size:13px}#profileCode{background:var(--bg)}
+@media(max-width:760px){.account-actions{gap:6px}.account-actions button{padding:8px;font-size:12px}}
+.users-page{max-width:1000px}.user-search{max-width:360px;margin:24px 0 12px}.user-search input{margin-top:7px}.user-card{padding:24px;background:#fff;border:1px solid var(--line);border-radius:12px;margin:20px 0}.user-card h2{font-size:18px;margin:0 0 18px}.user-card>label{max-width:360px}.user-card>label input{margin-top:6px}.permissions-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}.permissions-table caption{text-align:left;padding-bottom:10px;font-weight:bold}.permissions-table th,.permissions-table td{padding:12px 8px;border-bottom:1px solid var(--line);text-align:center}.permissions-table th:first-child{text-align:left}.permissions-table input{width:18px;height:18px;accent-color:var(--green)}.danger{background:#fbeae6;color:#a53728}.users-page .secondary{border-radius:8px;padding:10px 14px;white-space:nowrap}.account-actions{flex-wrap:wrap;justify-content:flex-end}#usersError{color:#a53728}
+@media(max-width:760px){.user-card{padding:16px}.permissions-table th,.permissions-table td{padding:12px 5px;font-size:12px}}
+.menu-toggle,.menu-close,.menu-backdrop,.drawer-account{display:none}
+@media screen and (max-width:760px){
+  .menu-toggle,.menu-close{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;background:transparent;color:var(--green);font-size:25px;flex-shrink:0}
+  .menu-close{align-self:flex-end;margin-bottom:12px;font-size:30px}
+  .workspace>header{justify-content:flex-start;gap:12px;padding:0 14px}
+  .workspace>header>span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .sidebar{position:fixed;inset:0 auto 0 0;width:min(300px,86vw);height:100dvh;display:flex;padding:16px 22px 24px;z-index:1001;overflow-y:auto;overscroll-behavior:contain;transform:translateX(-100%);visibility:hidden;transition:transform .2s ease,visibility .2s}
+  .sidebar .brand small,.sidebar .nav-label,.sidebar .side-bottom{display:block}
+  .sidebar .nav-label{margin:28px 14px 10px}
+  .sidebar nav{display:block;margin:0}
+  .sidebar nav a{justify-content:flex-start;padding:14px;margin:6px 0;font-size:14px;gap:14px}
+  .sidebar .side-bottom{padding-top:24px}
+  .drawer-account{display:block;border-top:1px solid var(--line);margin-top:20px;padding-top:16px}
+  .drawer-account .account-actions{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+  .drawer-account .profile-link,.drawer-account #account{display:block;padding:12px 14px;text-align:left;font-size:13px;white-space:normal;overflow-wrap:anywhere}
+  .menu-backdrop{display:block;position:fixed;inset:0;background:#18372e66;z-index:1000}
+  .menu-open{overflow:hidden}
+  .menu-open .sidebar{transform:translateX(0);visibility:visible}
+}
+@media(prefers-reduced-motion:reduce){.sidebar{transition:none}}
+@media print{.menu-toggle,.menu-close,.menu-backdrop,.drawer-account{display:none!important}}
