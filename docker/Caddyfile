@@ -1,3 +1,9 @@
 tlj0717.iptime.org {
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
+
 	reverse_proxy web:8000
 }
