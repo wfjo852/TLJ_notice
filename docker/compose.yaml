@@ -42,6 +42,21 @@ services:
       - uploads:/app/backend/uploads
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
 volumes:
   db-data:
   uploads:
+  caddy-data:
+  caddy-config:

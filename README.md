@@ -16,6 +16,14 @@ Docker가 실행된 환경에서, 저장소 루트에서:
 docker compose -f docker/compose.yaml up --build -d
 ```
 
+### HTTPS (tlj0717.iptime.org)
+
+Compose starts Caddy alongside the web app. Caddy serves `https://tlj0717.iptime.org/`, obtains and renews its TLS certificate automatically, and proxies requests to `web:8000`. Certificate state is kept in the `caddy-data` volume. Do not remove this volume when restarting the stack.
+
+Forward router TCP port 443 to TCP port 443 on the Docker host, and allow it through the host firewall. For HTTP-to-HTTPS redirects, forward router TCP port 80 to TCP port 80 on the same host; if port 80 currently forwards to the app's port 8000, change that forwarding rule. The DNS name must continue to resolve to the router's public IP. Start or update the stack with the Compose command above, then check `docker compose -f docker/compose.yaml logs caddy` and open `https://tlj0717.iptime.org/`.
+
+The app remains available directly on port 8000 during the transition. Once the router forwards port 80 to Caddy, remove any public forwarding to port 8000 so external HTTP traffic goes through Caddy.
+
 회원용: http://localhost:8000/ (로그인 필수). 비회원용: http://localhost:8000/guest.html (전체 조회·물품 요청 작성). 종료는 `docker compose -f docker/compose.yaml down`, 데이터까지 초기화하려면 `-v`를 추가합니다.
 
 `web` 서비스는 MySQL(`db` 서비스)이 준비될 때까지 기다렸다가 시작하며, 시작 시 필요한 테이블을 자동으로 만듭니다(`backend/schema.sql`). 게시글 DB는 `db-data` 볼륨에, 첨부파일은 `uploads` 볼륨(`/app/backend/uploads`)에 저장되어 컨테이너를 다시 만들어도 유지됩니다.
