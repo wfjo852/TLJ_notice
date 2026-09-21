@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: tlj_notice
+      MYSQL_USER: tlj
+      MYSQL_PASSWORD: tlj_password
+      MYSQL_ROOT_PASSWORD: tlj_root_password
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptlj_root_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: tlj
+      DB_PASSWORD: tlj_password
+      DB_NAME: tlj_notice
+      SECRET_KEY: change-this-secret-key
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/app/backend/uploads
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  uploads:

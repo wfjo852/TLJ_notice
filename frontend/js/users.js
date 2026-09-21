@@ -1,3 +1,5 @@
+let members = [];
+
 function requireUserAdmin() {
   if (!currentMember()) {
     location.replace('login.html?next=users.html');
@@ -13,20 +15,7 @@ function requireUserAdmin() {
 async function updateUser(id, name, permissions) {
   await refreshIdentity();
   if (!requireUserAdmin()) throw Error('0026 사용자만 변경할 수 있습니다.');
-  name = name.trim();
-  if (!name || name.length > 30) throw Error('이름을 1~30자로 입력해 주세요.');
-  const normalized = {};
-  for (const key of Object.keys(boards)) {
-    normalized[key] = {};
-    for (const action of ['read', 'write', 'edit', 'delete']) {
-      if (typeof permissions?.[key]?.[action] !== 'boolean') throw Error('권한 설정을 확인해 주세요.');
-      normalized[key][action] = permissions[key][action];
-    }
-  }
-  const existing = await get('members', id);
-  if (!existing) throw Error('사용자를 찾을 수 없습니다.');
-  const updated = {...existing, name, permissions: normalized};
-  await put('members', updated);
+  const updated = await api(`/api/users/${id}`, { method: 'PUT', body: { name, permissions } });
   members = members.map(user => user.id === id ? updated : user);
   return updated;
 }
@@ -59,7 +48,7 @@ function renderUsers() {
       th.textContent = title;
       row.append(th);
       inputs[key] = {};
-      for (const [action, text] of Object.entries({read:'읽기', write:'쓰기', edit:'수정', delete:'삭제'})) {
+      for (const [action, text] of Object.entries({ read: '읽기', write: '쓰기', edit: '수정', delete: '삭제' })) {
         const td = document.createElement('td');
         const input = document.createElement('input');
         input.type = 'checkbox';
@@ -75,20 +64,20 @@ function renderUsers() {
     const actions = document.createElement('div');
     actions.className = 'form-actions';
     const reset = document.createElement('button');
-    reset.type = 'button';reset.className = 'quiet';reset.textContent = '기본 권한으로';
+    reset.type = 'button'; reset.className = 'quiet'; reset.textContent = '기본 권한으로';
     reset.onclick = () => {
       const defaults = defaultPermissions();
       for (const key of Object.keys(inputs)) for (const action of Object.keys(inputs[key])) inputs[key][action].checked = defaults[key][action];
       status.textContent = '기본 권한을 적용하려면 변경 저장을 눌러 주세요.';
     };
     const save = document.createElement('button');
-    save.type = 'submit';save.className = 'primary';save.textContent = '변경 저장';
+    save.type = 'submit'; save.className = 'primary'; save.textContent = '변경 저장';
     const status = document.createElement('p');
-    status.className = 'muted';status.setAttribute('role', 'status');
+    status.className = 'muted'; status.setAttribute('role', 'status');
     actions.append(reset, save);
     form.append(heading, label, table, actions, status);
     form.onsubmit = async event => {
-      event.preventDefault();save.disabled = true;status.textContent = '저장 중…';
+      event.preventDefault(); save.disabled = true; status.textContent = '저장 중…';
       const permissions = Object.fromEntries(Object.entries(inputs).map(([key, controls]) => [key, Object.fromEntries(Object.entries(controls).map(([action, input]) => [action, input.checked]))]));
       try {
         const updated = await updateUser(user.id, name.value, permissions);
@@ -116,8 +105,9 @@ function filterUsers() {
 
 (async () => {
   try {
-    await initializeStore();
+    await refreshIdentity();
     if (!requireUserAdmin()) return;
+    members = await api('/api/users');
     $('usersPanel').hidden = false;
     $('userSearch').oninput = filterUsers;
     renderUsers();
@@ -128,7 +118,7 @@ function filterUsers() {
 
 window.addEventListener('pageshow', async event => {
   if (event.persisted) {
-    try { await refreshIdentity();requireUserAdmin(); }
+    try { await refreshIdentity(); requireUserAdmin(); }
     catch { location.replace('login.html?next=users.html'); }
   }
 });

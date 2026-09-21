@@ -1,5 +1,5 @@
 function requireProfileMember() {
-  if (!currentMember() || sessionStorage.getItem('tlj-session') !== member) {
+  if (!currentMember()) {
     location.replace('login.html?next=profile.html');
     return false;
   }
@@ -17,15 +17,10 @@ async function saveProfile() {
   }
   $('saveProfile').disabled = true;
   try {
-    const savedMember = await get('members', member);
-    if (!savedMember || !requireProfileMember()) {
-      if (!savedMember) location.replace('login.html?next=profile.html');
-      return;
-    }
-    const updated = {...savedMember, name};
-    await put('members', updated);
-    members = members.map(user => user.id === updated.id ? updated : user);
-    $('profileName').value = name;
+    await api('/api/me', { method: 'PUT', body: { name } });
+    await refreshIdentity();
+    if (!requireProfileMember()) return;
+    $('profileName').value = currentMember().name;
     $('profileStatus').textContent = '이름을 변경했습니다.';
   } catch {
     $('profileError').textContent = '저장하지 못했습니다. 다시 시도해 주세요.';
@@ -36,7 +31,7 @@ async function saveProfile() {
 
 (async () => {
   try {
-    await initializeStore();
+    await refreshIdentity();
     if (!requireProfileMember()) return;
     $('profileCode').value = member;
     $('profileName').value = currentMember().name;
@@ -52,5 +47,5 @@ async function saveProfile() {
 })();
 
 window.addEventListener('pageshow', event => {
-  if (event.persisted) requireProfileMember();
+  if (event.persisted) refreshIdentity().then(requireProfileMember);
 });
