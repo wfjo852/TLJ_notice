@@ -30,11 +30,21 @@ async function deleteUser(id) {
 function renderUsers() {
   $('userList').replaceChildren();
   for (const user of [...members].sort((a, b) => a.id.localeCompare(b.id))) {
+    const card = document.createElement('details');
+    card.className = 'user-card';
+    card.dataset.search = `${user.id} ${user.name}`.toLocaleLowerCase();
+    const summary = document.createElement('summary');
+    summary.className = 'user-summary';
+    const summaryName = document.createElement('span');
+    const updateSummary = value => { summaryName.textContent = `${user.id} · ${value}${user.isAdmin ? ' · 관리자' : ''}`; };
+    updateSummary(user.name);
+    const hint = document.createElement('span');
+    hint.className = 'user-summary-hint';
+    hint.textContent = '펼치기';
+    card.addEventListener('toggle', () => { hint.textContent = card.open ? '접기' : '펼치기'; });
+    summary.append(summaryName, hint);
     const form = document.createElement('form');
-    form.className = 'user-card';
-    form.dataset.search = `${user.id} ${user.name}`.toLocaleLowerCase();
-    const heading = document.createElement('h2');
-    heading.textContent = `회원번호 ${user.id}${user.isAdmin ? ' · 관리자' : ''}`;
+    form.className = 'user-card-form';
     const label = document.createElement('label');
     label.textContent = '이름';
     const name = document.createElement('input');
@@ -98,8 +108,8 @@ function renderUsers() {
     save.type = 'submit'; save.className = 'primary'; save.textContent = '변경 저장';
     const remove = document.createElement('button');
     remove.type = 'button'; remove.className = 'danger'; remove.textContent = '회원 삭제';
-    remove.disabled = user.id === currentMember()?.id;
-    if (remove.disabled) remove.title = '현재 로그인한 관리자 본인은 삭제할 수 없습니다.';
+    remove.disabled = !!user.isAdmin;
+    if (remove.disabled) remove.title = 'ADMIN_ID에 지정된 관리자 계정은 삭제할 수 없습니다.';
     const status = document.createElement('p');
     status.className = 'muted'; status.setAttribute('role', 'status');
     remove.onclick = async () => {
@@ -108,29 +118,33 @@ function renderUsers() {
       status.textContent = '삭제 중…';
       try {
         await deleteUser(user.id);
-        form.remove();
+        card.remove();
         filterUsers();
         toast('회원을 삭제했습니다.');
       } catch (error) {
         status.textContent = error.message || '회원을 삭제하지 못했습니다.';
-        remove.disabled = false; save.disabled = false; reset.disabled = false;
+        remove.disabled = !!user.isAdmin; save.disabled = false; reset.disabled = false;
       }
     };
     actions.append(reset, remove, save);
-    form.append(heading, label, tableScroll, actions, status);
+    form.append(label, tableScroll, actions, status);
     form.onsubmit = async event => {
       event.preventDefault(); save.disabled = true; remove.disabled = true; status.textContent = '저장 중…';
       const permissions = Object.fromEntries(Object.entries(inputs).map(([key, controls]) => [key, Object.fromEntries(Object.entries(controls).map(([action, input]) => [action, input.checked]))]));
       try {
         const updated = await updateUser(user.id, name.value, permissions);
         name.value = updated.name;
-        form.dataset.search = `${user.id} ${updated.name}`.toLocaleLowerCase();
+        user.name = updated.name;
+        user.isAdmin = updated.isAdmin;
+        card.dataset.search = `${user.id} ${updated.name}`.toLocaleLowerCase();
+        updateSummary(updated.name);
         status.textContent = '이름과 권한을 저장했습니다.';
       } catch (error) {
         status.textContent = error.message || '저장하지 못했습니다.';
-      } finally { save.disabled = false; remove.disabled = user.id === currentMember()?.id; }
+      } finally { save.disabled = false; remove.disabled = !!user.isAdmin; }
     };
-    $('userList').append(form);
+    card.append(summary, form);
+    $('userList').append(card);
   }
   filterUsers();
 }

@@ -1,6 +1,17 @@
 const registration = document.body.dataset.page === 'register';
 const requestedPage = new URLSearchParams(location.search).get('next');
-const destination = ['cake.html', 'notice.html', 'request.html', 'profile.html', 'users.html'].includes(requestedPage) ? requestedPage : 'cake.html';
+function safeDestination(value) {
+  const allowed = ['cake.html', 'notice.html', 'request.html', 'profile.html', 'users.html', 'post.html', 'edit.html'];
+  try {
+    const url = new URL(value || 'cake.html', location.href);
+    if (url.origin === location.origin && allowed.some(page => url.pathname === '/' + page)) return url.pathname.slice(1) + url.search;
+  } catch {}
+  return 'cake.html';
+}
+const destination = safeDestination(requestedPage);
+document.querySelectorAll('a[href="login.html"],a[href="register.html"]').forEach(link => {
+  link.href += '?next=' + encodeURIComponent(destination);
+});
 
 async function authenticate() {
   const id = $('memberCode').value;

@@ -38,10 +38,14 @@ def update_user(user_id):
     payload = request.get_json(silent=True) or {}
     name = str(payload.get('name', '')).strip()
     permissions = payload.get('permissions') or {}
+    if not isinstance(permissions, dict):
+        return jsonify({'error': '권한 설정을 확인해 주세요.'}), 400
     if not name or len(name) > 30:
         return jsonify({'error': '이름을 1~30자로 입력해 주세요.'}), 400
     normalized = {}
     for key in BOARDS:
+        if not isinstance(permissions.get(key), dict):
+            return jsonify({'error': '권한 설정을 확인해 주세요.'}), 400
         normalized[key] = {}
         for action in ACTIONS:
             value = (permissions.get(key) or {}).get(action)
@@ -64,8 +68,8 @@ def delete_user(user_id):
     member = current_member()
     if not is_admin(member):
         return jsonify({'error': '관리자만 삭제할 수 있습니다.'}), 403
-    if user_id == member['id']:
-        return jsonify({'error': '현재 로그인한 관리자 본인은 삭제할 수 없습니다.'}), 400
+    if is_admin({'id': user_id}):
+        return jsonify({'error': 'ADMIN_ID에 지정된 관리자 계정은 삭제할 수 없습니다.'}), 400
     db = get_db()
     files = []
     db.begin()

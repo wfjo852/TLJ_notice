@@ -81,7 +81,7 @@ async function openEditor(post = null) {
   $('draftStatus').textContent = draft ? '저장된 작성 내용을 불러왔습니다.' : '작성 내용은 자동으로 임시저장됩니다.';
   renderAttachments();
   editorOpen = true;
-  $('editorDialog').showModal();
+  $('editorPage').hidden = false;
   $('postTitle').focus();
 }
 
@@ -90,7 +90,7 @@ async function closeEditor() {
   try {
     await queueDraft();
     editorOpen = false;
-    $('editorDialog').close();
+    location.href = editorReturnUrl();
   } catch {
     toast('임시저장에 실패했습니다. 내용을 복사해 보관해 주세요.');
   }
@@ -147,7 +147,7 @@ async function drawBlob(blob) {
 async function openImage(index) {
   imageIndex = index;
   try {
-    const response = await fetch(media[index].url, { credentials: 'same-origin' });
+    const response = await fetch(mediaUrl(media[index].url), { credentials: 'same-origin' });
     if (!response.ok) throw Error();
     originalImage = await response.blob();
     await drawBlob(originalImage);
@@ -172,7 +172,6 @@ function wireEditor() {
   $('imageInput').onchange = e => { addFile(e.target.files[0], 'image'); e.target.value = ''; };
   $('videoInput').onchange = e => { addFile(e.target.files[0], 'video'); e.target.value = ''; };
   $('closeEditor').onclick = closeEditor;
-  $('editorDialog').addEventListener('cancel', e => { e.preventDefault(); closeEditor(); });
   $('discardDraft').onclick = async () => {
     if (mediaBusy) return;
     if (!confirm('작성 중인 내용을 삭제할까요?')) return;
@@ -180,8 +179,7 @@ function wireEditor() {
       await draftQueue.catch(() => {});
       await api(`/api/drafts/${draftScope()}`, { method: 'DELETE' });
       editorOpen = false;
-      $('editorDialog').close();
-      toast('임시저장을 삭제했습니다.');
+      location.href = editorReturnUrl();
     } catch {
       toast('임시저장을 삭제하지 못했습니다.');
     }
@@ -198,16 +196,16 @@ function wireEditor() {
       await refreshIdentity();
       await queueDraft();
       const payload = { title: value.title.trim(), body: value.body, guestName: value.guest.trim() };
+      let saved;
       if (editing) {
-        await api(`/api/posts/${editing}`, { method: 'PUT', body: payload });
+        saved = await api(`/api/posts/${editing}`, { method: 'PUT', body: payload });
+        await api(`/api/drafts/${draftScope()}`, { method: 'DELETE' });
       } else {
         payload.board = board;
-        await api('/api/posts', { method: 'POST', body: payload });
+        saved = await api('/api/posts', { method: 'POST', body: payload });
       }
       editorOpen = false;
-      $('editorDialog').close();
-      await refresh();
-      toast('게시글을 저장했습니다.');
+      location.replace(postUrl(saved.id));
     } catch (error) {
       toast(error.message || '저장하지 못했습니다. 서버 연결을 확인해 주세요.');
     } finally {

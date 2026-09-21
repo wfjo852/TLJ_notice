@@ -17,7 +17,7 @@ class MemberDeleteTest(unittest.TestCase):
         assert os.environ['DB_NAME'].startswith('tlj_delete_test_')
         cls.files = tempfile.TemporaryDirectory()
         cls.app = create_app()
-        cls.app.config.update(TESTING=True, ADMIN_IDS={'0026'}, UPLOAD_DIR=cls.files.name)
+        cls.app.config.update(TESTING=True, ADMIN_IDS={'0026', '8802'}, UPLOAD_DIR=cls.files.name)
         wait_for_schema(cls.app, attempts=1)
 
     @classmethod
@@ -43,6 +43,10 @@ class MemberDeleteTest(unittest.TestCase):
         self.assertEqual(other.delete('/api/users/1234').status_code, 403)
         self.assertEqual(guest.delete('/api/users/1234', headers={'X-TLJ-Guest':'1'}).status_code, 403)
         self.assertEqual(admin.delete('/api/users/0026').status_code, 400)
+        second_admin = self.app.test_client()
+        self.assertEqual(second_admin.post('/api/auth/register', json={'id':'8802','name':'다른 관리자'}).status_code, 201)
+        self.assertEqual(admin.delete('/api/users/8802').status_code, 400)
+        self.assertEqual(second_admin.delete('/api/users/0026').status_code, 400)
         self.assertEqual(admin.delete('/api/users/9999').status_code, 404)
 
         # Fail the last operation to confirm all prior mutations roll back.
@@ -78,6 +82,10 @@ class MemberDeleteTest(unittest.TestCase):
         self.assertEqual(admin.get('/api/posts/other').json['author'], '동일 이름')
         self.assertEqual(len(admin.get('/api/posts/cake').json['media']),1)
         self.assertTrue(Path(self.files.name,'published').exists())
+        with guest.get('/api/media/published?guest=1') as response:
+            self.assertEqual(response.status_code,200)
+        self.assertEqual(guest.get('/api/media/published').status_code,404)
+        self.assertEqual(guest.get('/api/media/draft-file?guest=1').status_code,404)
         self.assertFalse(Path(self.files.name,'draft-file').exists())
         self.assertIsNone(writer.get('/api/me').json['member'])
         self.assertEqual(writer.post('/api/auth/login',json={'id':'1234'}).status_code,404)

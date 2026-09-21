@@ -120,6 +120,19 @@ function canDelete(post) {
   return !!post.canDelete;
 }
 
+function postUrl(id, guest = guestMode) {
+  return `${guest ? 'guest-' : ''}post.html?id=${encodeURIComponent(id)}`;
+}
+function editorUrl(boardName, id = null) {
+  return `${guestMode ? 'guest-' : ''}edit.html?board=${encodeURIComponent(boardName)}${id ? '&id=' + encodeURIComponent(id) : ''}`;
+}
+function listUrl(boardName = board) {
+  return `${guestMode ? 'guest-' : ''}${boards[boardName] ? boardName : 'cake'}.html`;
+}
+function loginForCurrentPage() {
+  location.replace('login.html?next=' + encodeURIComponent(location.pathname.split('/').pop() + location.search));
+}
+
 async function refreshIdentity() {
   if (guestMode) { member = null; memberRecord = null; return; }
   const result = await api('/api/me');
@@ -130,4 +143,18 @@ async function refreshIdentity() {
 async function logout() {
   try { await api('/api/auth/logout', { method: 'POST' }); } catch {}
   location.replace('login.html');
+}
+function mediaElement(item) {
+  const element = document.createElement(item.kind === 'image' ? 'img' : 'video');
+  element.src = mediaUrl(item.url);
+  if (item.kind === 'video') { element.controls = true; element.preload = 'metadata'; }
+  else element.alt = item.name;
+  return element;
+}
+
+function mediaUrl(url) {
+  if (!guestMode) return url;
+  const result = new URL(url, location.href);
+  result.searchParams.set('guest', '1');
+  return result.href;
 }

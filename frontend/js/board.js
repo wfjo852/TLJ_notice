@@ -42,7 +42,8 @@ function render() {
     head.innerHTML = '<span class="number">번호</span><span>제목</span><span class="author">작성자</span><span>작성일</span>';
     $('posts').append(head);
     filtered.slice((page - 1) * 30, page * 30).forEach((p, index) => {
-      const row = document.createElement('button');
+      const row = document.createElement('a');
+      row.href = postUrl(p.id);
       row.className = 'row';
       const number = document.createElement('span');
       number.className = 'number';
@@ -57,7 +58,7 @@ function render() {
       when.dateTime = p.created;
       when.textContent = shortDate(p.created);
       row.append(number, title, author, when);
-      row.onclick = () => showPost(p.id).catch(() => toast('게시글을 불러오지 못했습니다.'));
+
       $('posts').append(row);
     });
   }
@@ -75,21 +76,13 @@ function render() {
   pageButton('›', page + 1);
 }
 
-function mediaElement(item) {
-  const element = document.createElement(item.kind === 'image' ? 'img' : 'video');
-  element.src = item.url;
-  if (item.kind === 'video') { element.controls = true; element.preload = 'metadata'; }
-  else element.alt = item.name;
-  return element;
-}
-
 function wire() {
   $('search').oninput = () => { page = 1; render(); };
-  $('newPost').onclick = () => openEditor().catch(() => toast('작성 화면을 열 수 없습니다.'));
+  $('newPost').onclick = () => { location.href = editorUrl(board); };
   $('account').onclick = () => { if (guestMode) { location.href = 'login.html'; return; } logout(); };
   document.querySelectorAll('[data-close]').forEach(button => button.onclick = () => $(button.dataset.close).close());
-  wireEditor();
-  wireDetail();
+
+
 }
 
 (async () => {
