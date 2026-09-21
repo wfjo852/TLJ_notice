@@ -24,9 +24,9 @@ Forward router TCP port 443 to TCP port 443 on the Docker host, and allow it thr
 
 The app remains available directly on port 8000 during the transition. Once the router forwards port 80 to Caddy, remove any public forwarding to port 8000 so external HTTP traffic goes through Caddy.
 
-회원용: http://localhost:8000/ (로그인 필수). 비회원용: http://localhost:8000/guest.html (전체 조회·물품 요청 작성). 종료는 `docker compose -f docker/compose.yaml down`, 데이터까지 초기화하려면 `-v`를 추가합니다.
+회원용: http://localhost:8000/ (로그인 필수). 비회원용: http://localhost:8000/guest.html (전체 조회·물품 요청 작성). 종료는 `docker compose -f docker/compose.yaml down`을 사용합니다. `-v`를 추가해도 호스트의 `docker/DB` 폴더는 삭제되지 않지만 다른 Docker 볼륨은 삭제되므로 주의하세요.
 
-`web` 서비스는 MySQL(`db` 서비스)이 준비될 때까지 기다렸다가 시작하며, 시작 시 필요한 테이블을 자동으로 만듭니다(`backend/schema.sql`). 게시글 DB는 `db-data` 볼륨에, 첨부파일은 `uploads` 볼륨(`/app/backend/uploads`)에 저장되어 컨테이너를 다시 만들어도 유지됩니다.
+`web` 서비스는 MySQL(`db` 서비스)이 준비될 때까지 기다렸다가 시작하며, 시작 시 필요한 테이블을 자동으로 만듭니다(`backend/schema.sql`). 게시글 DB는 호스트의 `docker/DB` 폴더에 상대경로 바인드 마운트로 저장됩니다. 첨부파일은 `uploads` 볼륨(`/app/backend/uploads`)에 저장되어 컨테이너를 다시 만들어도 유지됩니다. `docker/DB`는 Git에 포함되지 않습니다. 기존 `db-data` 볼륨을 사용하던 Windows 서버에서는 파일을 직접 복사하면 MySQL의 대소문자 설정이 달라져 시작하지 못할 수 있으므로, SQL 덤프를 새 `docker/DB`의 MySQL에 복원한 다음 Compose 설정을 적용해야 합니다.
 
 `docker/web-env`(`web` 서비스 환경 변수)와 `docker/compose.yaml`의 `MYSQL_ROOT_PASSWORD`는 예시 값입니다. 실제 운영 환경에서는 반드시 값을 변경하세요. `docker/web-env`의 `DB_NAME`/`DB_USER`/`DB_PASSWORD`를 바꾸면 `docker/compose.yaml`의 `db` 서비스 `MYSQL_DATABASE`/`MYSQL_USER`/`MYSQL_PASSWORD`도 같은 값으로 맞춰야 합니다.
 
