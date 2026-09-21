@@ -1,3 +1,0 @@
-tlj0717.iptime.org {
-	reverse_proxy web:8000
-}

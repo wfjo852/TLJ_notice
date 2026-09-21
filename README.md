@@ -16,14 +16,6 @@ Docker가 실행된 환경에서, 저장소 루트에서:
 docker compose -f docker/compose.yaml up --build -d
 ```
 
-### HTTPS (tlj0717.iptime.org)
-
-Compose starts Caddy alongside the web app. Caddy serves `https://tlj0717.iptime.org/`, obtains and renews its TLS certificate automatically, and proxies requests to `web:8000`. Certificate state is kept in the `caddy-data` volume. Do not remove this volume when restarting the stack.
-
-Forward router TCP port 443 to TCP port 443 on the Docker host, and allow it through the host firewall. For HTTP-to-HTTPS redirects, forward router TCP port 80 to TCP port 80 on the same host; if port 80 currently forwards to the app's port 8000, change that forwarding rule. The DNS name must continue to resolve to the router's public IP. Start or update the stack with the Compose command above, then check `docker compose -f docker/compose.yaml logs caddy` and open `https://tlj0717.iptime.org/`.
-
-The app remains available directly on port 8000 during the transition. Once the router forwards port 80 to Caddy, remove any public forwarding to port 8000 so external HTTP traffic goes through Caddy.
-
 회원용: http://localhost:8000/ (로그인 필수). 비회원용: http://localhost:8000/guest.html (전체 조회·물품 요청 작성). 종료는 `docker compose -f docker/compose.yaml down`을 사용합니다. `-v`를 추가해도 호스트의 `docker/DB` 폴더는 삭제되지 않지만 다른 Docker 볼륨은 삭제되므로 주의하세요.
 
 `web` 서비스는 MySQL(`db` 서비스)이 준비될 때까지 기다렸다가 시작하며, 시작 시 필요한 테이블을 자동으로 만듭니다(`backend/schema.sql`). 게시글 DB는 호스트의 `docker/DB` 폴더에 상대경로 바인드 마운트로 저장됩니다. 첨부파일은 `uploads` 볼륨(`/app/backend/uploads`)에 저장되어 컨테이너를 다시 만들어도 유지됩니다. `docker/DB`는 Git에 포함되지 않습니다. 기존 `db-data` 볼륨을 사용하던 Windows 서버에서는 파일을 직접 복사하면 MySQL의 대소문자 설정이 달라져 시작하지 못할 수 있으므로, SQL 덤프를 새 `docker/DB`의 MySQL에 복원한 다음 Compose 설정을 적용해야 합니다.
