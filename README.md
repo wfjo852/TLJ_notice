@@ -6,7 +6,7 @@ HTML/CSS/JavaScript 프론트, Python(Flask) API 서버, MySQL로 구성된 매�
 
 - `frontend/` — HTML/CSS/JavaScript 정적 파일 (Flask가 그대로 서빙)
 - `backend/` — Flask API 서버, MySQL 접근, 첨부파일 저장
-- `docker/` — `Dockerfile`, `compose.yaml` (앱 + MySQL)
+- `docker/` — `Dockerfile`, `compose.yaml` (앱 + MySQL + phpMyAdmin)
 
 ## 실행
 
@@ -20,7 +20,21 @@ docker compose -f docker/compose.yaml up --build -d
 
 `web` 서비스는 MySQL(`db` 서비스)이 준비될 때까지 기다렸다가 시작하며, 시작 시 필요한 테이블을 자동으로 만듭니다(`backend/schema.sql`). 게시글 DB는 `db-data` 볼륨에, 첨부파일은 `uploads` 볼륨(`/app/backend/uploads`)에 저장되어 컨테이너를 다시 만들어도 유지됩니다.
 
-`docker/compose.yaml`의 `MYSQL_ROOT_PASSWORD`·`MYSQL_PASSWORD`·`SECRET_KEY`는 예시 값입니다. 실제 운영 환경에서는 반드시 값을 변경하세요.
+`docker/web-env`(`web` 서비스 환경 변수)와 `docker/compose.yaml`의 `MYSQL_ROOT_PASSWORD`는 예시 값입니다. 실제 운영 환경에서는 반드시 값을 변경하세요. `docker/web-env`의 `DB_NAME`/`DB_USER`/`DB_PASSWORD`를 바꾸면 `docker/compose.yaml`의 `db` 서비스 `MYSQL_DATABASE`/`MYSQL_USER`/`MYSQL_PASSWORD`도 같은 값으로 맞춰야 합니다.
+
+## phpMyAdmin 접속
+
+phpMyAdmin은 http://localhost:8080/ 에서 접속합니다. 다른 기기에서는 `http://서버IP:8080/`을 사용합니다. 연결 대상은 Compose의 `db:3306`으로 고정되어 있습니다.
+
+로그인은 MySQL 계정을 사용합니다. `db` 서비스의 `MYSQL_USER` / `MYSQL_PASSWORD`로 로그인하면 `MYSQL_DATABASE` 데이터베이스를 관리할 수 있습니다. 전체 DB 관리가 필요하면 `root`와 `MYSQL_ROOT_PASSWORD`를 사용합니다. 기존 DB 볼륨의 비밀번호를 변경한 경우에는 실제 DB에 설정된 비밀번호를 입력하세요.
+
+이미 서버가 실행 중이라면 아래 명령으로 phpMyAdmin을 추가할 수 있습니다.
+
+```sh
+docker compose -f docker/compose.yaml up -d phpmyadmin
+```
+
+이미지 및 연결 환경 변수: [phpMyAdmin 공식 Docker 이미지](https://hub.docker.com/_/phpmyadmin).
 
 ## 백엔드 구조
 
@@ -89,7 +103,7 @@ JavaScript도 `frontend/js` 아래에서 역할별로 분리했습니다: `commo
 
 ## User 관리 및 권한
 
-`0026`으로 로그인하면 회원 게시판 사이드 메뉴에 **User 관리** 링크가 표시됩니다. `/users.html`에서 사용자 검색, 이름 변경, 게시판별 읽기·쓰기·수정·삭제 체크박스를 설정한 뒤 사용자별 **변경 저장**을 누릅니다. `0026` 이외의 회원은 관리 페이지와 저장 작업에 접근할 수 없습니다(서버가 매 요청마다 다시 확인합니다). 관리자 번호를 자동 생성하지 않으므로 기존 회원 등록 절차를 사용합니다.
+`docker/web-env`의 `ADMIN_ID`로 지정한 회원번호(기본값 `0026`, 여러 명이면 `0026,0031`처럼 쉼표로 구분)로 로그인하면 회원 게시판 사이드 메뉴에 **User 관리** 링크가 표시됩니다. `/users.html`에서 사용자 검색, 이름 변경, 게시판별 읽기·쓰기·수정·삭제 체크박스를 설정한 뒤 사용자별 **변경 저장**을 누릅니다. `ADMIN_ID`가 아닌 회원은 관리 페이지와 저장 작업에 접근할 수 없습니다(서버가 매 요청마다 다시 확인합니다). 관리자 번호를 자동 생성하지 않으므로 기존 회원 등록 절차를 사용합니다. `ADMIN_ID`를 바꾼 뒤에는 `docker compose -f docker/compose.yaml up -d`로 재적용하세요.
 
 | 기본 권한 | 읽기 | 쓰기 | 수정 | 삭제 |
 | --- | --- | --- | --- | --- |
@@ -97,6 +111,14 @@ JavaScript도 `frontend/js` 아래에서 역할별로 분리했습니다: `commo
 | 공지사항 | 허용 | 미허용 | 미허용 | 미허용 |
 | 필요 물품 요청 | 허용 | 허용 | 허용 | 허용 |
 
-신규 회원과 권한 설정이 없는 기존 회원에게 위 기본값이 적용됩니다. `0026`도 게시판 기본 권한은 동일하며 User 관리에서 본인의 권한을 추가할 수 있습니다. 수정·삭제 권한은 해당 게시판의 모든 글에 적용됩니다. 쓰기와 수정은 별도 권한입니다. 글 상세 화면을 통해 수정·삭제하려면 읽기 권한도 함께 부여하세요. 읽기 권한이 없으면 목록과 상세 내용이 표시되지 않습니다. 변경된 권한은 페이지를 불러오거나 글 열기·작성·수정·삭제 시 서버에서 다시 확인합니다.
+신규 회원과 권한 설정이 없는 기존 회원에게 위 기본값이 적용됩니다. 관리자(`ADMIN_ID`)도 게시판 기본 권한은 동일하며 User 관리에서 본인의 권한을 추가할 수 있습니다. 수정·삭제 권한은 해당 게시판의 모든 글에 적용됩니다. 쓰기와 수정은 별도 권한입니다. 글 상세 화면을 통해 수정·삭제하려면 읽기 권한도 함께 부여하세요. 읽기 권한이 없으면 목록과 상세 내용이 표시되지 않습니다. 변경된 권한은 페이지를 불러오거나 글 열기·작성·수정·삭제 시 서버에서 다시 확인합니다.
 
 기존 비회원 URL에서는 모든 게시판을 조회하고 물품 요청을 작성할 수 있으며, 자신이 쓴 비회원 물품 요청만 수정·삭제합니다(브라우저별 익명 쿠키로 식별). 관리자에 의한 이름 변경도 기존 게시글 작성자 이름을 소급 변경하지 않습니다.
+
+## 회원 삭제
+
+User 관리의 **회원 삭제** 버튼으로 다른 회원을 삭제할 수 있습니다. 관리자만 실행할 수 있으며, 현재 로그인한 관리자 본인은 삭제할 수 없습니다. 삭제 전 확인 창을 표시합니다.
+
+회원의 기존 게시글과 게시글 첨부파일은 유지하고, 목록·상세·인쇄의 작성자를 `삭제됨`으로 표시합니다. 회원과 게시글의 연결을 해제하므로 같은 회원번호로 재가입해도 이전 글의 작성자가 새 회원으로 바뀌지 않습니다. 해당 회원의 임시저장과 임시 첨부파일은 제거합니다. 삭제된 회원의 로그인 세션은 무효화됩니다.
+
+서버 시작 시 기존 members 테이블에 session_token 컬럼을 자동 추가합니다. 이 기능을 처음 적용하면 기존 사용자는 다시 로그인해야 합니다. DB 변경은 트랜잭션으로 처리되며 테스트는 별도 `tlj_delete_test_` 접두사 DB에서 `tests/test_member_delete.py`로 실행합니다.

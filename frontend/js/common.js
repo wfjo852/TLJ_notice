@@ -71,15 +71,26 @@ function currentMember() {
 }
 
 function defaultPermissions() {
-  return Object.fromEntries(Object.keys(boards).map(key => [key, { read: true, write: key === 'request', edit: key === 'request', delete: key === 'request' }]));
+  return Object.fromEntries(Object.keys(boards).map(key => [key, {
+    read: true, write: key === 'request',
+    editOwn: key === 'request', editOthers: key === 'request',
+    deleteOwn: key === 'request', deleteOthers: key === 'request',
+  }]));
 }
 
 function permissionsFor(user) {
   const defaults = defaultPermissions();
   for (const key of Object.keys(defaults)) {
     for (const action of Object.keys(defaults[key])) {
-      const value = user?.permissions?.[key]?.[action];
+      const stored = user?.permissions?.[key] || {};
+      let value = stored[action];
+      if (!(action in stored) && /^(edit|delete)/.test(action)) {
+        value = stored[action.startsWith('edit') ? 'edit' : 'delete'];
+      }
       if (typeof value === 'boolean') defaults[key][action] = value;
+    }
+    for (const action of ['edit', 'delete']) {
+      if (defaults[key][action + 'Others']) defaults[key][action + 'Own'] = true;
     }
   }
   return defaults;
@@ -90,7 +101,7 @@ function hasPermission(key, action) {
 }
 
 function isUserAdmin() {
-  return !guestMode && member === '0026' && !!currentMember();
+  return !guestMode && !!currentMember()?.isAdmin;
 }
 
 function canRead(key = board) {

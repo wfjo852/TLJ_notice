@@ -1,6 +1,7 @@
 services:
   db:
     image: mysql:8.4
+    # MYSQL_DATABASE/USER/PASSWORD must match DB_NAME/DB_USER/DB_PASSWORD in web-env.
     environment:
       MYSQL_DATABASE: tlj_notice
       MYSQL_USER: tlj
@@ -15,17 +16,23 @@ services:
       retries: 20
     restart: unless-stopped
 
+  phpmyadmin:
+    image: phpmyadmin:5-apache
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
   web:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    environment:
-      DB_HOST: db
-      DB_PORT: "3306"
-      DB_USER: tlj
-      DB_PASSWORD: tlj_password
-      DB_NAME: tlj_notice
-      SECRET_KEY: change-this-secret-key
+    env_file: web-env
     depends_on:
       db:
         condition: service_healthy

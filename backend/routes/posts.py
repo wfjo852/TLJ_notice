@@ -101,8 +101,11 @@ def create_post():
         )
         _move_draft_media(cursor, key, post_id)
         media = media_for_post(cursor, post_id)
+    created_post = {'board': board, 'member': member['id'] if member else None, 'owner': owner}
     result = {'id': post_id, 'board': board, 'title': title, 'body': body, 'author': author,
-              'created': now, 'updated': now, 'media': media, 'canEdit': True, 'canDelete': True}
+              'created': now, 'updated': now, 'media': media,
+              'canEdit': can_edit(member, created_post, guest, owner),
+              'canDelete': can_delete(member, created_post, guest, owner)}
     return jsonify(result), 201
 
 

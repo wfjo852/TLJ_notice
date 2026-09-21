@@ -1,0 +1,14 @@
+# web 서비스(backend/config.py) 환경 변수.
+# 이 파일을 수정한 뒤에는 `docker compose -f docker/compose.yaml up -d` 로 다시 적용하세요.
+
+DB_HOST=db
+DB_PORT=3306
+DB_USER=tlj
+DB_PASSWORD=tlj_password
+DB_NAME=tlj_notice
+SECRET_KEY=change-this-secret-key
+
+# frontend의 "User 관리" 페이지(회원별 게시판 권한 설정)가 보이는 관리자 회원번호.
+# 이 번호로 로그인한 회원만 /users.html 과 사용자 권한 변경 API에 접근할 수 있습니다.
+# 여러 명을 관리자로 두려면 쉼표로 구분하세요. 예: ADMIN_ID=0026,0031
+ADMIN_ID=0026,8802

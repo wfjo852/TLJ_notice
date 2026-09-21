@@ -11,6 +11,7 @@ class Config:
     DB_PASSWORD = os.environ.get('DB_PASSWORD', 'tlj_password')
     DB_NAME = os.environ.get('DB_NAME', 'tlj_notice')
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
+    ADMIN_IDS = frozenset(v.strip() for v in os.environ.get('ADMIN_ID', '0026').split(',') if v.strip())
     UPLOAD_DIR = os.environ.get('UPLOAD_DIR', DEFAULT_UPLOAD_DIR)
     PORT = int(os.environ.get('PORT', '8000'))
     SESSION_COOKIE_SAMESITE = 'Lax'

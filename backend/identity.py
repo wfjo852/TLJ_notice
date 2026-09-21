@@ -34,8 +34,11 @@ def current_member():
         return g.member_cache
     member_id = session.get('member')
     member = _load_member(member_id)
+    if member and session.get('member_token') != member['session_token']:
+        member = None
     if member_id and not member:
         session.pop('member', None)
+        session.pop('member_token', None)
     g.member_cache = member
     return member
 

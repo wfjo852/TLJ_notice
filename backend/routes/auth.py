@@ -1,11 +1,12 @@
 import json
 import re
+import uuid
 
 from flask import Blueprint, jsonify, request, session
 
 from db import get_db
 from identity import current_member, is_guest_request
-from permissions import default_permissions
+from permissions import default_permissions, is_admin, permissions_for
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -15,7 +16,7 @@ MEMBER_ID_RE = re.compile(r'^[0-9]{4}$')
 def serialize_member(member):
     if not member:
         return None
-    return {'id': member['id'], 'name': member['name'], 'permissions': member['permissions']}
+    return {'id': member['id'], 'name': member['name'], 'permissions': permissions_for(member), 'isAdmin': is_admin(member)}
 
 
 @auth_bp.get('/me')
@@ -50,15 +51,17 @@ def register():
     if not name or len(name) > 30:
         return jsonify({'error': '회원가입 시 이름을 입력해 주세요.'}), 400
     db = get_db()
+    token = str(uuid.uuid4())
     with db.cursor() as cursor:
         cursor.execute('SELECT id FROM members WHERE id=%s', (member_id,))
         if cursor.fetchone():
             return jsonify({'error': '이미 등록된 회원번호입니다.'}), 409
         cursor.execute(
-            'INSERT INTO members (id, name, permissions) VALUES (%s, %s, %s)',
-            (member_id, name, json.dumps(default_permissions())),
+            'INSERT INTO members (id, name, permissions, session_token) VALUES (%s, %s, %s, %s)',
+            (member_id, name, json.dumps(default_permissions()), token),
         )
     session['member'] = member_id
+    session['member_token'] = token
     return jsonify({'member': {'id': member_id, 'name': name}}), 201
 
 
@@ -70,15 +73,17 @@ def login():
         return jsonify({'error': '4자리 회원번호를 입력해 주세요.'}), 400
     db = get_db()
     with db.cursor() as cursor:
-        cursor.execute('SELECT id, name FROM members WHERE id=%s', (member_id,))
+        cursor.execute('SELECT id, name, session_token FROM members WHERE id=%s', (member_id,))
         row = cursor.fetchone()
     if not row:
         return jsonify({'error': '등록되지 않은 회원번호입니다. 회원가입 후 이용해 주세요.'}), 404
     session['member'] = member_id
-    return jsonify({'member': row})
+    session['member_token'] = row['session_token']
+    return jsonify({'member': {'id': row['id'], 'name': row['name']}})
 
 
 @auth_bp.post('/auth/logout')
 def logout():
     session.pop('member', None)
+    session.pop('member_token', None)
     return '', 204

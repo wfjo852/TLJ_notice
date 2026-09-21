@@ -46,6 +46,10 @@ def wait_for_schema(app, attempts=30, delay=2):
                 with connection.cursor() as cursor:
                     for statement in statements:
                         cursor.execute(statement)
+                    cursor.execute("SHOW COLUMNS FROM members LIKE 'session_token'")
+                    if not cursor.fetchone():
+                        cursor.execute('ALTER TABLE members ADD COLUMN session_token CHAR(36) NULL')
+                    cursor.execute('UPDATE members SET session_token=UUID() WHERE session_token IS NULL')
             finally:
                 connection.close()
             return
