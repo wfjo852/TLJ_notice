@@ -1,0 +1,35 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>가격표 인쇄 · TLJ</title><link rel="stylesheet" href="style.css"><script defer src="js/common.js"></script><script defer src="js/price.js"></script></head><body data-mode="member" data-page="price"><main class="standalone-main price-main">
+<div class="detail-heading no-print"><a href="cake.html">← 게시판으로</a><span class="eyebrow">PRICE TAG</span></div>
+<div class="intro no-print"><div><div class="eyebrow">PRICE TAG</div><h1>가격표 인쇄</h1><p>제품명과 가격을 입력하고 디자인을 선택해 80mm 영수증 용지에 바로 인쇄하세요.</p></div></div>
+<div class="price-layout">
+<section class="standalone-card price-form no-print">
+<h2>가격표 추가</h2>
+<label>제품명<input id="tagName" maxlength="40" placeholder="예) 딸기 생크림 케이크"></label>
+<div class="price-form-row">
+<label>가격<input id="tagPrice" type="number" min="0" step="100" placeholder="0" inputmode="numeric"></label>
+<label class="qty-label">수량<input id="tagQty" type="number" min="1" step="1" value="1" inputmode="numeric"></label>
+</div>
+<p class="muted">디자인</p>
+<div class="preset-picker" role="radiogroup" aria-label="가격표 디자인 선택">
+<button type="button" class="preset-option" data-preset="simple" aria-pressed="true">심플</button>
+<button type="button" class="preset-option" data-preset="classic" aria-pressed="false">클래식</button>
+<button type="button" class="preset-option" data-preset="minimal" aria-pressed="false">미니멀</button>
+</div>
+<div class="form-actions">
+<button type="button" id="clearTags" class="quiet">전체 삭제</button>
+<button type="button" id="addTag" class="primary">＋ 추가</button>
+</div>
+<hr>
+<h2>인쇄 목록 <span id="tagCount" class="count">0</span></h2>
+<div id="tagQueue" class="tag-queue"></div>
+<p id="tagEmpty" class="muted">추가된 가격표가 없습니다.</p>
+</section>
+<section class="price-preview">
+<div class="print-controls no-print">
+<button type="button" id="printTags" class="secondary">🖨 가격표 인쇄</button>
+<span class="muted">80mm 영수증 용지 기준</span>
+</div>
+<div class="receipt-shell"><div id="printArea"></div></div>
+</section>
+</div>
+</main><div id="toast" role="status" hidden></div></body></html>

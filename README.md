@@ -92,10 +92,13 @@ docker compose -f docker/compose.yaml up -d phpmyadmin
 | 케이크 생산 | `/cake.html` | `/guest-cake.html` |
 | 공지사항 | `/notice.html` | `/guest-notice.html` |
 | 필요 물품 요청 | `/request.html` | `/guest-request.html` |
+| 가격표 인쇄 | `/price.html` | — |
 
 기본 `/` 주소는 로그인 페이지로, 기존 `/guest.html`은 비회원 물품 요청 페이지로 이동합니다. 회원 게시판에 직접 접속하면 로그인 여부를 확인하고, 로그인 후 요청한 게시판으로 돌아갑니다. 게시글 조회·작성·수정은 각각 별도 페이지로 이동합니다. 이미지 그리기 도구만 대화상자로 열립니다.
 
-JavaScript도 `frontend/js` 아래에서 역할별로 분리했습니다: `common.js`(API 호출·세션·공통 함수), `auth.js`(로그인·회원가입), `board.js`(목록·검색·페이지), `editor.js`(작성·임시저장·첨부파일·이미지 편집), `detail.js`(상세·인쇄), `dialogs.js`(공통 대화상자 마크업). 스타일은 `style.css`를 공유합니다.
+JavaScript도 `frontend/js` 아래에서 역할별로 분리했습니다: `common.js`(API 호출·세션·공통 함수), `auth.js`(로그인·회원가입), `board.js`(목록·검색·페이지), `editor.js`(작성·임시저장·첨부파일·이미지 편집), `detail.js`(상세·인쇄), `dialogs.js`(공통 대화상자 마크업), `price.js`(가격표 인쇄). 스타일은 `style.css`를 공유합니다.
+
+가격표 인쇄(`/price.html`)는 서버 저장 없이 브라우저 화면에서만 동작합니다. 제품명·가격·수량을 입력해 목록에 추가하고 심플·클래식·미니멀 3가지 디자인 중 하나를 선택하면 오른쪽 미리보기가 그대로 80mm 영수증 용지에 인쇄됩니다.
 
 ## 회원 이름 변경
 
