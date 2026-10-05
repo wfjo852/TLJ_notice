@@ -96,17 +96,13 @@ async function closeEditor() {
   }
 }
 
-async function addFile(file, kind) {
-  if (!file) return;
+async function uploadFile(file, kind) {
   const types = kind === 'image' ? ['image/png', 'image/jpeg', 'image/webp'] : ['video/mp4', 'video/webm'];
-  if (!types.includes(file.type)) { toast('지원하지 않는 파일 형식입니다.'); return; }
+  if (!types.includes(file.type)) { toast(`지원하지 않는 파일 형식입니다. (${file.name})`); return; }
   if (file.size > (kind === 'image' ? 10 : 50) * 1024 * 1024) {
-    toast(kind === 'image' ? '이미지는 10MB 이하로 첨부해 주세요.' : '동영상은 50MB 이하로 첨부해 주세요.');
+    toast(kind === 'image' ? `이미지는 10MB 이하로 첨부해 주세요. (${file.name})` : '동영상은 50MB 이하로 첨부해 주세요.');
     return;
   }
-  if (media.length >= 10) { toast('첨부파일은 최대 10개까지 가능합니다.'); return; }
-  mediaBusy = true;
-  $('savePost').disabled = true;
   try {
     let blob = file;
     if (kind === 'image') {
@@ -126,9 +122,24 @@ async function addFile(file, kind) {
     const created = await api(mediaScopeUrl(), { method: 'POST', body: form });
     media.push(created);
     renderAttachments();
+  } catch {
+    toast(`첨부 실패 · 파일 또는 서버 저장 공간을 확인해 주세요. (${file.name})`);
+  }
+}
+
+async function addFiles(fileList, kind) {
+  const files = Array.from(fileList || []);
+  if (!files.length || mediaBusy) return;
+  const room = 10 - media.length;
+  if (room <= 0) { toast('첨부파일은 최대 10개까지 가능합니다.'); return; }
+  if (files.length > room) toast(`첨부파일은 최대 10개까지 가능합니다. ${room}개만 추가합니다.`);
+  mediaBusy = true;
+  $('savePost').disabled = true;
+  try {
+    for (const file of files.slice(0, room)) await uploadFile(file, kind);
     await queueDraft();
   } catch {
-    toast('첨부 실패 · 파일 또는 서버 저장 공간을 확인해 주세요.');
+    toast('임시저장에 실패했습니다.');
   } finally {
     mediaBusy = false;
     $('savePost').disabled = false;
@@ -169,8 +180,8 @@ function wireEditor() {
     b.onmousedown = e => e.preventDefault();
     b.onclick = () => { $('richBody').focus(); document.execCommand(b.dataset.format, false); queueDraft(); };
   });
-  $('imageInput').onchange = e => { addFile(e.target.files[0], 'image'); e.target.value = ''; };
-  $('videoInput').onchange = e => { addFile(e.target.files[0], 'video'); e.target.value = ''; };
+  $('imageInput').onchange = e => { addFiles(e.target.files, 'image'); e.target.value = ''; };
+  $('videoInput').onchange = e => { addFiles(e.target.files, 'video'); e.target.value = ''; };
   $('closeEditor').onclick = closeEditor;
   $('discardDraft').onclick = async () => {
     if (mediaBusy) return;

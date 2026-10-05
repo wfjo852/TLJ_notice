@@ -39,8 +39,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - uploads:/app/backend/uploads
+      # 공지사항 이미지/동영상. 컨테이너는 UID 10001로 실행되므로 호스트 폴더 소유자도 10001이어야 합니다.
+      - ./uploads:/app/backend/uploads
     restart: unless-stopped
-
-volumes:
-  uploads:

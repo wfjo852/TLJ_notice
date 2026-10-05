@@ -1,3 +1,4 @@
 /docker/DB/
+/docker/uploads/
 /docker/DB-raw-copy/
 /docker/DB-*.sql
