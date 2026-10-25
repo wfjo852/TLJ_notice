@@ -1,0 +1,18 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>클레임 관리 · TLJ</title><link rel="stylesheet" href="style.css"><script defer src="js/common.js"></script><script defer src="js/navigation.js"></script><script defer src="js/claim.js"></script></head><body data-mode="guest" data-page="claims"><div id="appShell" hidden>
+<aside class="sidebar"><a class="brand" href="guest-cake.html"><span class="logo">T</span><span>TOUS les JOURS<small>우리 매장 소식</small></span></a><div class="nav-label">매장 게시판</div><nav aria-label="게시판"><a href="guest-cake.html" data-board="cake">◷ <span>케이크 생산</span></a><a href="guest-notice.html" data-board="notice">▤ <span>공지사항</span></a><a href="guest-request.html" data-board="request">＋ <span>필요 물품 요청</span></a><a href="guest-claim.html" data-board="claim" class="active">☎ <span>클레임 관리</span></a></nav><div class="side-bottom"><span class="status-dot"></span> 오늘도, 좋은 하루를 만듭니다.<small>매장의 소식을 한 곳에서 확인하세요.</small></div></aside>
+<div class="workspace"><header><span>매장 운영 <b>/</b> <span id="breadcrumb">클레임 관리</span></span><button id="account" class="quiet">로그아웃</button></header><main>
+<div class="intro"><div><div class="eyebrow">CUSTOMER CLAIMS</div><h1>클레임 관리</h1><p>연락처별 마지막 클레임과 누적 횟수를 확인하세요.</p></div><button id="newClaim" class="primary">＋ 클레임 등록</button></div>
+<section class="board-panel"><div class="list-toolbar"><div><h2>연락처별 클레임</h2><span id="total" class="count">0</span></div><label class="search"><span>⌕</span><input id="search" type="search" placeholder="연락처 또는 물품·내용 검색" aria-label="연락처 또는 물품·내용 검색"></label></div><div id="posts"></div></section>
+<p class="local-note">클레임 내역은 매장 서버에 저장되어 모든 기기에서 함께 확인할 수 있습니다.</p>
+</main><footer>TOUS les JOURS <span>매일의 소통이 더 좋은 매장을 만듭니다.</span></footer></div>
+</div>
+<dialog id="claimDialog" class="wide"><form id="claimForm"><div class="dialog-heading"><h2>클레임 등록</h2><button type="button" class="icon" data-close="claimDialog" aria-label="닫기">×</button></div>
+<div class="claim-form-grid"><label>연락처<input id="claimPhone" type="tel" inputmode="numeric" autocomplete="off" placeholder="010-0000-0000" maxlength="13" required></label><label>구매 날짜<input id="claimDate" type="date" required></label></div>
+<label>구매 물품<input id="claimItem" maxlength="100" placeholder="예) 딸기 생크림 케이크" required></label>
+<label>클레임 내용<textarea id="claimContent" rows="4" maxlength="5000" required></textarea></label>
+<label class="check-label"><input id="claimResolved" type="checkbox"> 처리 완료</label>
+<label>클레임 처리 방법 <small class="muted">(선택 · 댓글로 등록됩니다)</small><textarea id="claimComment" rows="3" maxlength="5000"></textarea></label>
+<label>작성자 <small class="muted">(선택)</small><input id="claimGuestName" maxlength="30" placeholder="비회원"></label>
+<p id="claimError" class="form-error" role="alert"></p>
+<div class="form-actions"><button type="button" class="quiet" data-close="claimDialog">취소</button><button id="claimSubmit" class="primary">등록</button></div></form></dialog>
+<div id="toast" role="status" hidden></div></body></html>

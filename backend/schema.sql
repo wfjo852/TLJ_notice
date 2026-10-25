@@ -45,3 +45,28 @@ CREATE TABLE IF NOT EXISTS media (
   CONSTRAINT fk_media_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
   CONSTRAINT fk_media_draft FOREIGN KEY (draft_id) REFERENCES drafts(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS claims (
+  id CHAR(36) PRIMARY KEY,
+  phone VARCHAR(11) NOT NULL,
+  purchase_date DATE NOT NULL,
+  item VARCHAR(100) NOT NULL,
+  content TEXT NOT NULL,
+  resolved TINYINT(1) NOT NULL DEFAULT 0,
+  author VARCHAR(30) NOT NULL,
+  member CHAR(4) NULL,
+  created DATETIME NOT NULL,
+  updated DATETIME NOT NULL,
+  INDEX idx_claims_phone (phone, created)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS claim_comments (
+  id CHAR(36) PRIMARY KEY,
+  claim_id CHAR(36) NOT NULL,
+  body TEXT NOT NULL,
+  author VARCHAR(30) NOT NULL,
+  member CHAR(4) NULL,
+  created DATETIME NOT NULL,
+  INDEX idx_claim_comments_claim (claim_id, created),
+  CONSTRAINT fk_claim_comments_claim FOREIGN KEY (claim_id) REFERENCES claims(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

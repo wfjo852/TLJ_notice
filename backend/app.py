@@ -6,6 +6,7 @@ import db as db_module
 from config import Config
 from identity import apply_pending_guest_cookie
 from routes.auth import auth_bp
+from routes.claims import claims_bp
 from routes.drafts import drafts_bp
 from routes.media import media_bp
 from routes.posts import posts_bp
@@ -25,6 +26,7 @@ def create_app():
     app.register_blueprint(drafts_bp, url_prefix='/api')
     app.register_blueprint(users_bp, url_prefix='/api')
     app.register_blueprint(media_bp, url_prefix='/api')
+    app.register_blueprint(claims_bp, url_prefix='/api')
 
     @app.after_request
     def _guest_cookie(response):

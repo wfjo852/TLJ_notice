@@ -1,0 +1,21 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>클레임 · TLJ</title><link rel="stylesheet" href="style.css"><script defer src="js/common.js"></script><script defer src="js/claim.js"></script></head><body data-mode="member" data-page="claim-detail"><main class="standalone-main"><p id="pageStatus" role="status">클레임을 불러오는 중입니다.</p><div id="claimPage" hidden>
+<section class="standalone-card">
+<div class="detail-heading"><a id="backToList" href="claim.html">← 클레임 목록</a><span class="eyebrow">CURRENT CLAIM</span></div>
+<h1 id="claimPhoneTitle"></h1><p id="claimSummary" class="meta"></p>
+<dl id="claimInfo" class="claim-info"></dl>
+<h2 class="claim-section-title">클레임 내용</h2><p id="claimBody" class="claim-body"></p>
+<div class="claim-resolve"><label class="check-label"><input id="resolvedToggle" type="checkbox"> 처리 완료</label><span id="resolvedLabel"></span></div>
+<h2 class="claim-section-title">클레임 처리 방법 <span id="commentCount" class="count">0</span></h2>
+<ul id="commentList" class="claim-comments"></ul><p id="commentEmpty" class="muted">아직 등록된 처리 방법이 없습니다.</p>
+<form id="commentForm" class="comment-form"><textarea id="commentBody" rows="3" maxlength="5000" placeholder="처리 방법을 입력하세요" aria-label="처리 방법"></textarea><div class="form-actions"><button id="commentSubmit" class="primary">댓글 등록</button></div></form>
+<div class="detail-actions"><button id="editClaim" class="secondary">클레임 수정</button><button id="deleteClaim" class="danger" hidden>클레임 삭제</button></div>
+</section>
+<section class="standalone-card claim-history"><h2 class="claim-section-title">같은 연락처의 기존 클레임 <span id="historyCount" class="count">0</span></h2><div id="historyList"></div><p id="historyEmpty" class="muted">이 연락처로 등록된 다른 클레임이 없습니다.</p></section>
+</div></main>
+<dialog id="editDialog" class="wide"><form id="editForm"><div class="dialog-heading"><h2>클레임 수정</h2><button type="button" class="icon" data-close="editDialog" aria-label="닫기">×</button></div>
+<div class="claim-form-grid"><label>연락처<input id="claimPhone" type="tel" inputmode="numeric" autocomplete="off" placeholder="010-0000-0000" maxlength="13" required></label><label>구매 날짜<input id="claimDate" type="date" required></label></div>
+<label>구매 물품<input id="claimItem" maxlength="100" required></label>
+<label>클레임 내용<textarea id="claimContent" rows="5" maxlength="5000" required></textarea></label>
+<p id="claimError" class="form-error" role="alert"></p>
+<div class="form-actions"><button type="button" class="quiet" data-close="editDialog">취소</button><button id="claimSubmit" class="primary">저장</button></div></form></dialog>
+<div id="toast" role="status" hidden></div></body></html>

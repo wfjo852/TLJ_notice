@@ -93,6 +93,10 @@ docker compose -f docker/compose.yaml up -d phpmyadmin
 | 공지사항 | `/notice.html` | `/guest-notice.html` |
 | 필요 물품 요청 | `/request.html` | `/guest-request.html` |
 | 가격표 인쇄 | `/price.html` | — |
+| 클레임 관리 | `/claim.html` | `/guest-claim.html` |
+| 클레임 상세 | `/claim-detail.html?id=클레임ID` | `/guest-claim-detail.html?id=클레임ID` |
+
+클레임 관리는 회원과 비회원 모두 등록·조회·수정하고, 처리 여부 변경과 처리 방법 댓글 작성·수정·삭제를 할 수 있습니다. 연락처는 입력하는 대로 `010-1234-5678` 형식으로 맞춰지며 숫자만 저장됩니다. 목록은 연락처별 마지막 클레임과 누적 횟수를 보여주고, 상세 페이지는 현재 클레임과 같은 연락처의 기존 클레임을 함께 보여줍니다. 클레임 삭제는 관리자(`ADMIN_ID`)만 할 수 있습니다.
 
 기본 `/` 주소는 로그인 페이지로, 기존 `/guest.html`은 비회원 물품 요청 페이지로 이동합니다. 회원 게시판에 직접 접속하면 로그인 여부를 확인하고, 로그인 후 요청한 게시판으로 돌아갑니다. 게시글 조회·작성·수정은 각각 별도 페이지로 이동합니다. 이미지 그리기 도구만 대화상자로 열립니다.
 
