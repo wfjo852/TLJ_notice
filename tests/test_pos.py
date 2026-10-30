@@ -46,7 +46,7 @@ class PosApiTest(unittest.TestCase):
         self.assertEqual((product['prodNum'], product['name']), (5571, '오지치즈 포카치아'))
         image = admin.get(product['image'])
         with Image.open(io.BytesIO(image.data)) as saved:
-            self.assertEqual((saved.format, saved.size, saved.mode), ('WEBP', (200, 200), 'RGBA'))
+            self.assertEqual((saved.format, saved.size, saved.mode), ('WEBP', (100, 100), 'RGBA'))
         image.close()
         self.assertEqual(admin.post('/api/pos/products', json={'prodNum': '5571'}).status_code, 409)
         with mock.patch.object(pos, '_scrape', side_effect=LookupError):

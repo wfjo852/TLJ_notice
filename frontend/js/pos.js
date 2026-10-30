@@ -34,7 +34,8 @@ async function loadPos() {
   renderPos();
 }
 
-function productFace(product, holder) {
+// Grid cells show only the image (name as fallback) with the price below; the product list also shows the name.
+function productFace(product, holder, withName = true) {
   if (product.image) {
     const img = el('img');
     img.src = product.image;
@@ -42,8 +43,8 @@ function productFace(product, holder) {
     img.loading = 'lazy';
     holder.append(img);
   }
-  holder.append(el('b', '', product.name));
-  if (product.price != null) holder.append(el('span', 'price', won(product.price)));
+  if (withName || !product.image) holder.append(el('b', '', product.name));
+  holder.append(el('span', 'price', won(product.price)));
 }
 
 function renderCategories() {
@@ -79,8 +80,9 @@ function renderGrid() {
     const placed = cellAt(cat, posPage, slot);
     const product = placed && productById(placed[2]);
     if (product) {
-      productFace(product, cell);
-      cell.setAttribute('aria-label', product.name);
+      productFace(product, cell, false);
+      cell.title = product.name;
+      cell.setAttribute('aria-label', `${product.name} ${won(product.price)}`);
       if (selected?.categoryId === cat.id && selected.page === posPage && selected.slot === slot) cell.classList.add('selected');
       if (editing) {
         cell.draggable = true;

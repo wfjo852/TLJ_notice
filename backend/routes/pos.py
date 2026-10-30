@@ -20,7 +20,7 @@ pos_bp = Blueprint('pos', __name__)
 TLJ = 'https://www.tlj.co.kr'
 SECTIONS = ('bread', 'sandwich')
 SLOTS, MAX_PAGES = 20, 20
-IMAGE_WIDTH = 200
+IMAGE_WIDTH = 100
 
 
 def _now():
