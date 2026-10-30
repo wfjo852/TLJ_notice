@@ -151,3 +151,21 @@ User 관리의 **회원 삭제** 버튼으로 다른 회원을 삭제할 수 있
 작성 페이지는 `/edit.html?board=cake|notice`, 수정 페이지는 `/edit.html?board=게시판&id=게시글ID`입니다. 비회원은 글을 작성할 수 없습니다. 저장 후 해당 글의 상세 페이지로 이동하고, 수정 저장이 끝난 임시저장은 정리합니다. 케이크 생산 상세 페이지의 큰 글씨·80mm 인쇄 기본값도 유지합니다.
 
 페이지 이동·공유 주소·로그인 복귀·복사 대체 UI·인쇄 기본값 검사는 `node tests/test_post_pages.cjs`로 실행합니다.
+
+## POS 제품 데이터 이전
+
+`docker/pos-data.sql`은 테스트 서버에서 만든 POS 데이터(분류·제품·그리드 배치) 전체입니다. 제품 사진은 Git에 포함되지 않으므로(`docker/uploads/`는 `.gitignore` 대상) 직접 복사합니다.
+
+1. 운영 서버에서 최신 코드를 받고 web을 한 번 실행해 POS 테이블을 만듭니다(`./server.sh` → 4).
+2. 테스트 서버의 `docker/uploads/pos/` 폴더를 운영 서버의 같은 위치로 복사합니다. 리눅스 서버라면 `sudo chown -R 10001:10001 docker/uploads/pos`로 소유자를 맞춥니다.
+3. 운영 서버 저장소 루트에서 SQL을 적용합니다(Git Bash나 리눅스 셸에서 실행하세요. PowerShell의 `<`, `>`는 인코딩이 깨집니다). 운영 서버의 기존 POS 데이터는 모두 이 파일 내용으로 바뀝니다.
+
+```sh
+docker compose -f docker/compose.yaml exec -T db mysql -utlj -ptlj_password tlj_notice < docker/pos-data.sql
+```
+
+테스트 서버에서 POS 구성을 다시 바꾼 뒤 파일을 새로 만들려면:
+
+```sh
+docker compose -f docker/compose.yaml exec -T db mysqldump -utlj -ptlj_password --no-tablespaces --skip-comments --skip-dump-date tlj_notice pos_categories pos_products pos_cells > docker/pos-data.sql
+```
