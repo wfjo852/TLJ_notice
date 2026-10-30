@@ -1,3 +1,4 @@
 Flask>=3.0,<4
 PyMySQL>=1.1,<2
 waitress>=3.0,<4
+Pillow>=11,<13

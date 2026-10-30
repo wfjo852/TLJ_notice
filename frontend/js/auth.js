@@ -1,7 +1,7 @@
 const registration = document.body.dataset.page === 'register';
 const requestedPage = new URLSearchParams(location.search).get('next');
 function safeDestination(value) {
-  const allowed = ['cake.html', 'notice.html', 'request.html', 'profile.html', 'users.html', 'post.html', 'edit.html'];
+  const allowed = ['cake.html', 'notice.html', 'claim.html', 'claim-detail.html', 'price.html', 'pos.html', 'profile.html', 'users.html', 'post.html', 'edit.html'];
   try {
     const url = new URL(value || 'cake.html', location.href);
     if (url.origin === location.origin && allowed.some(page => url.pathname === '/' + page)) return url.pathname.slice(1) + url.search;

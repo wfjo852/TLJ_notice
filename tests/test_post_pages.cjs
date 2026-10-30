@@ -23,7 +23,7 @@ function page(file,query,member=null,post=null){
   for(const file of fs.readdirSync(root).filter(f=>f.endsWith('.html'))){
     for(const [,ref] of read(file).matchAll(/(?:src|href)="([^"]+)"/g))assert.ok(fs.existsSync(path.join(root,ref.split(/[?#]/)[0])),file+': '+ref);
   }
-  for(const kind of ['cake','notice','request']){
+  for(const kind of ['cake','notice']){
     const post={id:'post-1',board:kind,title:'테스트',body:'내용',author:'삭제됨',created:'2026-01-01',updated:'2026-01-01',media:[{kind:'image',name:'사진',url:'/api/media/image-1'}],canEdit:false,canDelete:false};
     const guest=page('guest-post.html','?id=post-1',null,post);
     guest.run(read('js/detail.js'));await tick();
@@ -45,13 +45,13 @@ function page(file,query,member=null,post=null){
   const auth=page('login.html','?next=post.html%3Fid%3Dpost-1');auth.run(read('js/auth.js'));await tick();
   assert.equal(auth.run('destination'),'post.html?id=post-1');assert.equal(auth.run("safeDestination('https://evil.test/post.html')"),'cake.html');
   assert.equal(auth.run("safeDestination('//evil.test/post.html')"),'cake.html');
-  const user={id:'0123',name:'회원',permissions:{request:{read:true,write:true}}};
-  const edit=page('edit.html','?board=request',user);
+  const user={id:'0123',name:'회원',permissions:{cake:{read:true,write:true}}};
+  const edit=page('edit.html','?board=cake',user);
   // Canvas controls live in the one remaining image-editing dialog.
   for(const id of ['imageCanvas','rotateImage','resetImage','applyImage','imageDialog','penColor','penSize'])edit.nodes.set(id,{addEventListener(){}});
   edit.run(read('js/editor.js'));edit.run(read('js/editor-page.js'));await tick();
   assert.equal(edit.nodes.get('editorPage').hidden,false);
-  edit.nodes.get('postTitle').value='요청';edit.nodes.get('plainBody').value='봉투';
+  edit.nodes.get('postTitle').value='생산';edit.nodes.get('plainBody').value='봉투';
   edit.run("api=async(path,options)=>path==='/api/me'?{member:{id:'0123',name:'회원'}}:path==='/api/posts'?{id:'saved-1'}:null;");
   await edit.nodes.get('postForm').onsubmit({preventDefault(){}});
   assert.equal(edit.redirects.at(-1),'post.html?id=saved-1');

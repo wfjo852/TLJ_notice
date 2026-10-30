@@ -1,17 +1,21 @@
 from flask import Blueprint, jsonify, request
 
 from db import get_db
-from identity import current_member, guest_owner_id
+from identity import current_member
 from media_store import delete_file, save_upload
 from permissions import BOARDS
 
 drafts_bp = Blueprint('drafts', __name__)
 
 
+@drafts_bp.before_request
+def _members_only():
+    if not current_member():
+        return jsonify({'error': '로그인이 필요합니다.'}), 401
+
+
 def draft_key(board, post_part):
-    member = current_member()
-    identity = member['id'] if member else f'guest-{guest_owner_id()}'
-    return f'{board}:{post_part}:{identity}'
+    return f'{board}:{post_part}:{current_member()["id"]}'
 
 
 def serialize_media(row):
@@ -20,9 +24,8 @@ def serialize_media(row):
 
 def ensure_draft_row(cursor, key, board):
     cursor.execute(
-        'INSERT INTO drafts (id, board, title, body, guest) VALUES (%s, %s, %s, %s, %s) '
-        'ON DUPLICATE KEY UPDATE id=id',
-        (key, board, '', '', ''),
+        'INSERT INTO drafts (id, board, title, body) VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE id=id',
+        (key, board, '', ''),
     )
 
 
@@ -39,7 +42,7 @@ def get_draft(board, post_part):
             return jsonify({'error': '임시저장된 내용이 없습니다.'}), 404
         cursor.execute('SELECT * FROM media WHERE draft_id=%s ORDER BY position, created_at', (key,))
         media = [serialize_media(row) for row in cursor.fetchall()]
-    return jsonify({'title': draft['title'], 'body': draft['body'], 'guest': draft['guest'], 'media': media})
+    return jsonify({'title': draft['title'], 'body': draft['body'], 'media': media})
 
 
 @drafts_bp.put('/drafts/<board>/<post_part>')
@@ -50,13 +53,12 @@ def put_draft(board, post_part):
     payload = request.get_json(silent=True) or {}
     title = str(payload.get('title', ''))
     body = payload.get('body', '')
-    guest = str(payload.get('guest', ''))
     db = get_db()
     with db.cursor() as cursor:
         cursor.execute(
-            'INSERT INTO drafts (id, board, title, body, guest) VALUES (%s, %s, %s, %s, %s) '
-            'ON DUPLICATE KEY UPDATE title=VALUES(title), body=VALUES(body), guest=VALUES(guest)',
-            (key, board, title, body, guest),
+            'INSERT INTO drafts (id, board, title, body) VALUES (%s, %s, %s, %s) '
+            'ON DUPLICATE KEY UPDATE title=VALUES(title), body=VALUES(body)',
+            (key, board, title, body),
         )
     return '', 204
 

@@ -1,4 +1,35 @@
+// Builds the shared sidebar (and a workspace header for pages without one) so every page shows the same menu.
+function buildLayout() {
+  const prefix = guestMode ? 'guest-' : '';
+  const links = [['cake', '◷', '케이크 생산'], ['notice', '▤', '공지사항'], ['claim', '☎', '클레임 관리']];
+  if (!guestMode) links.push(['price', '🏷', '가격표 인쇄']);
+  links.push(['pos', '▦', '포스 교육']);
+  const sidebar = document.createElement('aside');
+  sidebar.className = 'sidebar';
+  sidebar.innerHTML = `<a class="brand" href="${prefix}cake.html"><span class="logo">T</span><span>TOUS les JOURS<small>우리 매장 소식</small></span></a><div class="nav-label">매장 게시판</div><nav aria-label="게시판">${
+    links.map(([key, icon, label]) => `<a href="${prefix}${key}.html" data-board="${key}">${icon} <span>${label}</span></a>`).join('')}${
+    guestMode ? '' : '<a id="usersLink" href="users.html" data-board="users" hidden><span aria-hidden="true">⚙</span><span>User 관리</span></a>'
+  }</nav><div class="side-bottom"><span class="status-dot"></span> 오늘도, 좋은 하루를 만듭니다.<small>매장의 소식을 한 곳에서 확인하세요.</small></div>`;
+  const current = document.body.dataset.board || location.pathname.split('/').pop().replace(/^guest-/, '').replace(/(-detail)?\.html$/, '');
+  sidebar.querySelector(`nav a[data-board="${current}"]`)?.classList.add('active');
+
+  const shell = $('appShell') || document.body;
+  if (!shell.querySelector('.workspace')) {
+    const workspace = document.createElement('div');
+    workspace.className = 'workspace';
+    const header = document.createElement('header');
+    header.innerHTML = `<span>매장 운영 <b>/</b> <span id="breadcrumb"></span></span>${guestMode
+      ? '<button id="account" class="quiet">비회원 모드 · 회원 로그인</button>'
+      : '<div class="account-actions"><a href="profile.html" class="profile-link">회원정보</a><button id="account" class="quiet">로그아웃</button></div>'}`;
+    header.querySelector('#breadcrumb').textContent = document.title.split(' · ')[0];
+    workspace.append(header, ...shell.querySelectorAll(':scope > main'));
+    shell.prepend(workspace);
+  }
+  shell.prepend(sidebar);
+}
+
 (() => {
+  buildLayout();
   const sidebar = document.querySelector('.sidebar');
   const workspace = document.querySelector('.workspace');
   const header = workspace?.querySelector('header');

@@ -5,7 +5,6 @@ const guestMode = document.body.dataset.mode === 'guest';
 const boards = {
   cake: ['케이크 생산', '내일의 생산 목록을 확인하고 준비해 주세요.'],
   notice: ['공지사항', '매장에 필요한 소식과 안내를 함께 나눠요.'],
-  request: ['필요 물품 요청', '필요한 물품을 누구나 편하게 요청하세요.'],
 };
 
 let board = 'cake', page = 1, member = null, memberRecord = null, posts = [], editing = null, viewing = null;
@@ -72,9 +71,7 @@ function currentMember() {
 
 function defaultPermissions() {
   return Object.fromEntries(Object.keys(boards).map(key => [key, {
-    read: true, write: key === 'request',
-    editOwn: key === 'request', editOthers: key === 'request',
-    deleteOwn: key === 'request', deleteOthers: key === 'request',
+    read: true, write: false, editOwn: false, editOthers: false, deleteOwn: false, deleteOthers: false,
   }]));
 }
 
@@ -109,7 +106,7 @@ function canRead(key = board) {
 }
 
 function canWrite() {
-  return guestMode ? board === 'request' : hasPermission(board, 'write');
+  return !guestMode && hasPermission(board, 'write');
 }
 
 function canEdit(post) {
@@ -124,7 +121,7 @@ function postUrl(id, guest = guestMode) {
   return `${guest ? 'guest-' : ''}post.html?id=${encodeURIComponent(id)}`;
 }
 function editorUrl(boardName, id = null) {
-  return `${guestMode ? 'guest-' : ''}edit.html?board=${encodeURIComponent(boardName)}${id ? '&id=' + encodeURIComponent(id) : ''}`;
+  return `edit.html?board=${encodeURIComponent(boardName)}${id ? '&id=' + encodeURIComponent(id) : ''}`;
 }
 function listUrl(boardName = board) {
   return `${guestMode ? 'guest-' : ''}${boards[boardName] ? boardName : 'cake'}.html`;
@@ -134,10 +131,19 @@ function loginForCurrentPage() {
 }
 
 async function refreshIdentity() {
-  if (guestMode) { member = null; memberRecord = null; return; }
+  if (guestMode) { member = null; memberRecord = null; syncAccount(); return; }
   const result = await api('/api/me');
   memberRecord = result.member || null;
   member = memberRecord?.id || null;
+  syncAccount();
+}
+
+function syncAccount() {
+  if ($('usersLink')) $('usersLink').hidden = !isUserAdmin();
+  const account = $('account');
+  if (!account) return;
+  account.textContent = currentMember() ? `${currentMember().name} · 로그아웃` : guestMode ? '비회원 모드 · 회원 로그인' : '로그인';
+  account.onclick = () => { if (currentMember()) logout(); else location.href = 'login.html'; };
 }
 
 async function logout() {

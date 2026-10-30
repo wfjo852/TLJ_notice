@@ -80,7 +80,7 @@ def delete_user(user_id):
                 db.rollback()
                 return jsonify({'error': '사용자를 찾을 수 없습니다.'}), 404
             # Keep published posts and attachments, detach their former identity.
-            cursor.execute("UPDATE posts SET author=%s, member=NULL, owner=NULL WHERE member=%s",
+            cursor.execute("UPDATE posts SET author=%s, member=NULL WHERE member=%s",
                            ('삭제됨', user_id))
             cursor.execute('SELECT media.path FROM media JOIN drafts ON media.draft_id=drafts.id '
                            "WHERE SUBSTRING_INDEX(drafts.id, ':', -1)=%s", (user_id,))

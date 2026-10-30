@@ -5,7 +5,6 @@ async function refresh() {
 }
 
 function render() {
-  if ($('usersLink')) $('usersLink').hidden = !isUserAdmin();
   if (!canRead()) {
     $('posts').textContent = '이 게시판의 읽기 권한이 없습니다.';
     $('total').textContent = '0';
@@ -79,7 +78,6 @@ function render() {
 function wire() {
   $('search').oninput = () => { page = 1; render(); };
   $('newPost').onclick = () => { location.href = editorUrl(board); };
-  $('account').onclick = () => { if (guestMode) { location.href = 'login.html'; return; } logout(); };
   document.querySelectorAll('[data-close]').forEach(button => button.onclick = () => $(button.dataset.close).close());
 
 
@@ -94,8 +92,7 @@ function wire() {
       return;
     }
     $('appShell').hidden = false;
-    $('account').textContent = guestMode ? '비회원 모드 · 회원 로그인' : `${currentMember().name} · 로그아웃`;
-    wire();
+      wire();
     await refresh();
     window.dispatchEvent(new Event('tlj:ready'));
   } catch {

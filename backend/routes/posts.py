@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 
 from db import get_db
-from identity import current_member, guest_owner_id, is_guest_request, peek_guest_owner_id
+from identity import current_member, is_guest_request
 from media_store import delete_file, save_upload
 from permissions import BOARDS, can_delete, can_edit, can_read, can_write
 from routes.drafts import draft_key
@@ -59,11 +59,10 @@ def get_post(post_id):
         if not post or not can_read(member, post['board'], guest):
             return jsonify({'error': '읽기 권한이 없거나 삭제된 글입니다.'}), 404
         media = media_for_post(cursor, post_id)
-    owner_id = peek_guest_owner_id()
     result = serialize_post_summary(post)
     result['media'] = media
-    result['canEdit'] = can_edit(member, post, guest, owner_id)
-    result['canDelete'] = can_delete(member, post, guest, owner_id)
+    result['canEdit'] = can_edit(member, post)
+    result['canDelete'] = can_delete(member, post)
     return jsonify(result)
 
 
@@ -74,51 +73,46 @@ def _move_draft_media(cursor, draft_id, post_id):
 
 @posts_bp.post('/posts')
 def create_post():
-    guest = is_guest_request()
     member = current_member()
     payload = request.get_json(silent=True) or {}
     board = payload.get('board')
     if board not in BOARDS:
         return jsonify({'error': '존재하지 않는 게시판입니다.'}), 404
-    if not can_write(member, board, guest):
+    if not can_write(member, board):
         return jsonify({'error': '작성 또는 수정 권한이 없습니다.'}), 403
     title = str(payload.get('title', '')).strip()
     body = payload.get('body', '')
-    guest_name = str(payload.get('guestName', '')).strip()
     key = draft_key(board, 'new')
     if not title:
         return jsonify({'error': '제목과 내용을 입력해 주세요.'}), 400
     post_id = str(uuid.uuid4())
     now = now_iso()
-    author = (member['name'] if member else '') or guest_name or '비회원'
-    owner = guest_owner_id() if guest else None
+    author = member['name']
     db = get_db()
     with db.cursor() as cursor:
         cursor.execute(
-            'INSERT INTO posts (id, board, title, body, author, member, owner, created, updated) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-            (post_id, board, title, body, author, member['id'] if member else None, owner, now, now),
+            'INSERT INTO posts (id, board, title, body, author, member, created, updated) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+            (post_id, board, title, body, author, member['id'], now, now),
         )
         _move_draft_media(cursor, key, post_id)
         media = media_for_post(cursor, post_id)
-    created_post = {'board': board, 'member': member['id'] if member else None, 'owner': owner}
+    created_post = {'board': board, 'member': member['id']}
     result = {'id': post_id, 'board': board, 'title': title, 'body': body, 'author': author,
               'created': now, 'updated': now, 'media': media,
-              'canEdit': can_edit(member, created_post, guest, owner),
-              'canDelete': can_delete(member, created_post, guest, owner)}
+              'canEdit': can_edit(member, created_post),
+              'canDelete': can_delete(member, created_post)}
     return jsonify(result), 201
 
 
 @posts_bp.put('/posts/<post_id>')
 def update_post(post_id):
-    guest = is_guest_request()
     member = current_member()
     db = get_db()
     with db.cursor() as cursor:
         cursor.execute('SELECT * FROM posts WHERE id=%s', (post_id,))
         post = cursor.fetchone()
-        owner_id = peek_guest_owner_id()
-        if not post or not can_edit(member, post, guest, owner_id):
+        if not post or not can_edit(member, post):
             return jsonify({'error': '작성 또는 수정 권한이 없습니다.'}), 403
         payload = request.get_json(silent=True) or {}
         title = str(payload.get('title', '')).strip()
@@ -130,18 +124,17 @@ def update_post(post_id):
         media = media_for_post(cursor, post_id)
     return jsonify({'id': post_id, 'board': post['board'], 'title': title, 'body': body,
                      'author': post['author'], 'created': post['created'].isoformat(), 'updated': now,
-                     'media': media, 'canEdit': True, 'canDelete': can_delete(member, post, guest, owner_id)})
+                     'media': media, 'canEdit': True, 'canDelete': can_delete(member, post)})
 
 
 @posts_bp.delete('/posts/<post_id>')
 def delete_post(post_id):
-    guest = is_guest_request()
     member = current_member()
     db = get_db()
     with db.cursor() as cursor:
         cursor.execute('SELECT * FROM posts WHERE id=%s', (post_id,))
         post = cursor.fetchone()
-        if not post or not can_delete(member, post, guest, peek_guest_owner_id()):
+        if not post or not can_delete(member, post):
             return jsonify({'error': '삭제 권한이 없거나 이미 삭제된 글입니다.'}), 404
         cursor.execute('SELECT path FROM media WHERE post_id=%s', (post_id,))
         files = [row['path'] for row in cursor.fetchall()]
@@ -154,9 +147,7 @@ def delete_post(post_id):
 def _require_editable_post(cursor, post_id):
     cursor.execute('SELECT * FROM posts WHERE id=%s', (post_id,))
     post = cursor.fetchone()
-    guest = is_guest_request()
-    member = current_member()
-    if not post or not can_edit(member, post, guest, peek_guest_owner_id()):
+    if not post or not can_edit(current_member(), post):
         return None
     return post
 

@@ -42,7 +42,6 @@ function snapshot() {
   return {
     title: $('postTitle').value,
     body: board === 'notice' ? safeRich($('richBody').innerHTML) : $('plainBody').value,
-    guest: $('guestName').value,
   };
 }
 
@@ -70,8 +69,6 @@ async function openEditor(post = null) {
   $('postTitle').value = value?.title || (board === 'cake' ? tomorrowTitle() : '');
   $('plainBody').value = board === 'notice' ? '' : value?.body || '';
   $('richBody').innerHTML = board === 'notice' ? safeRich(value?.body || '') : '';
-  $('guestName').value = value?.guest || '';
-  $('guestLabel').hidden = !!currentMember();
   $('richBody').hidden = board !== 'notice';
   $('richTools').hidden = board !== 'notice';
   $('plainBody').hidden = board === 'notice';
@@ -169,7 +166,7 @@ async function openImage(index) {
 }
 
 function wireEditor() {
-  ['postTitle', 'plainBody', 'richBody', 'guestName'].forEach(id => $(id).addEventListener('input', queueDraft));
+  ['postTitle', 'plainBody', 'richBody'].forEach(id => $(id).addEventListener('input', queueDraft));
   $('richBody').addEventListener('paste', e => {
     e.preventDefault();
     document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
@@ -206,7 +203,7 @@ function wireEditor() {
     try {
       await refreshIdentity();
       await queueDraft();
-      const payload = { title: value.title.trim(), body: value.body, guestName: value.guest.trim() };
+      const payload = { title: value.title.trim(), body: value.body };
       let saved;
       if (editing) {
         saved = await api(`/api/posts/${editing}`, { method: 'PUT', body: payload });

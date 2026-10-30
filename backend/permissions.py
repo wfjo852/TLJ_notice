@@ -3,15 +3,12 @@ from flask import current_app
 BOARDS = {
     'cake': ('케이크 생산', '내일의 생산 목록을 확인하고 준비해 주세요.'),
     'notice': ('공지사항', '매장에 필요한 소식과 안내를 함께 나눠요.'),
-    'request': ('필요 물품 요청', '필요한 물품을 누구나 편하게 요청하세요.'),
 }
 ACTIONS = ('read', 'write', 'editOwn', 'editOthers', 'deleteOwn', 'deleteOthers')
 
 
 def default_permissions():
-    return {key: {'read': True, 'write': key == 'request',
-                  'editOwn': key == 'request', 'editOthers': key == 'request',
-                  'deleteOwn': key == 'request', 'deleteOthers': key == 'request'} for key in BOARDS}
+    return {key: {action: action == 'read' for action in ACTIONS} for key in BOARDS}
 
 
 def permissions_for(member):
@@ -44,19 +41,15 @@ def can_read(member, board, guest):
     return guest or has_permission(member, board, 'read')
 
 
-def can_write(member, board, guest):
-    return (board == 'request') if guest else has_permission(member, board, 'write')
+def can_write(member, board):
+    return has_permission(member, board, 'write')
 
 
-def can_edit(member, post, guest, guest_owner_id):
-    if guest:
-        return bool(guest_owner_id) and post['board'] == 'request' and not post['member'] and post['owner'] == guest_owner_id
+def can_edit(member, post):
     return can_change(member, post, 'edit')
 
 
-def can_delete(member, post, guest, guest_owner_id):
-    if guest:
-        return bool(guest_owner_id) and post['board'] == 'request' and not post['member'] and post['owner'] == guest_owner_id
+def can_delete(member, post):
     return can_change(member, post, 'delete')
 
 

@@ -32,12 +32,12 @@ class MemberDeleteTest(unittest.TestCase):
             old_session = dict(session)
         with self.app.app_context():
             with get_db().cursor() as cursor:
-                for board in ['cake', 'notice', 'request']:
+                for board in ['cake', 'notice']:
                     cursor.execute('INSERT INTO posts (id,board,title,body,author,member,created,updated) '
                                    "VALUES (%s,%s,'제목','본문','동일 이름','1234',NOW(),NOW())", (board, board))
-                cursor.execute("INSERT INTO posts (id,board,title,body,author,member,created,updated) VALUES ('other','request','제목','본문','동일 이름','5678',NOW(),NOW())")
-                cursor.execute("INSERT INTO drafts (id,board,body) VALUES ('request:new:1234','request','임시')")
-                for media_id, post_id, draft_id in [('published','cake',None), ('draft-file',None,'request:new:1234')]:
+                cursor.execute("INSERT INTO posts (id,board,title,body,author,member,created,updated) VALUES ('other','notice','제목','본문','동일 이름','5678',NOW(),NOW())")
+                cursor.execute("INSERT INTO drafts (id,board,body) VALUES ('notice:new:1234','notice','임시')")
+                for media_id, post_id, draft_id in [('published','cake',None), ('draft-file',None,'notice:new:1234')]:
                     Path(self.files.name, media_id).write_bytes(b'image')
                     cursor.execute("INSERT INTO media (id,post_id,draft_id,kind,name,mime,path,size) VALUES (%s,%s,%s,'image','사진','image/png',%s,5)", (media_id,post_id,draft_id,media_id))
         self.assertEqual(other.delete('/api/users/1234').status_code, 403)
@@ -73,7 +73,7 @@ class MemberDeleteTest(unittest.TestCase):
         self.assertEqual(admin.delete('/api/users/1234').status_code, 204)
         self.assertEqual(admin.delete('/api/users/1234').status_code, 404)
         self.assertNotIn('1234', [row['id'] for row in admin.get('/api/users').json])
-        for board in ['cake','notice','request']:
+        for board in ['cake','notice']:
             detail=guest.get('/api/posts/'+board,headers={'X-TLJ-Guest':'1'}).json
             self.assertEqual(detail['author'], '삭제됨')
             self.assertFalse(detail['canEdit']);self.assertFalse(detail['canDelete'])
@@ -93,7 +93,7 @@ class MemberDeleteTest(unittest.TestCase):
         self.assertEqual(replacement.post('/api/auth/register',json={'id':'1234','name':'새 회원'}).status_code,201)
         with writer.session_transaction() as session: session.update(old_session)
         self.assertIsNone(writer.get('/api/me').json['member'])
-        self.assertEqual(replacement.get('/api/drafts/request/new').status_code,404)
+        self.assertEqual(replacement.get('/api/drafts/notice/new').status_code,404)
         self.assertEqual(admin.get('/api/posts/cake').json['author'],'삭제됨')
 
     def test_legacy_schema_migration(self):
@@ -109,6 +109,33 @@ class MemberDeleteTest(unittest.TestCase):
         client = self.app.test_client()
         self.assertEqual(client.post('/api/auth/login', json={'id':'0026'}).status_code,200)
         self.assertEqual(client.get('/api/users').status_code,200)
+
+    def test_request_board_cleanup(self):
+        with self.app.app_context():
+            with get_db().cursor() as cursor:
+                cursor.execute("ALTER TABLE posts MODIFY board ENUM('cake','notice','request') NOT NULL, ADD COLUMN owner CHAR(36) NULL")
+                cursor.execute("ALTER TABLE drafts MODIFY board ENUM('cake','notice','request') NOT NULL, ADD COLUMN guest VARCHAR(30) NOT NULL DEFAULT ''")
+                cursor.execute("INSERT INTO posts (id,board,title,body,author,created,updated) VALUES "
+                               "('req','request','요청','본문','비회원',NOW(),NOW()), ('keep','cake','생산','본문','회원',NOW(),NOW())")
+                cursor.execute("INSERT INTO drafts (id,board,body) VALUES ('request:new:0026','request',''), ('cake:new:guest-x','cake',''), ('cake:new:0026','cake','')")
+                for media_id, post_id, draft_id in [('req-file','req',None), ('guest-file',None,'cake:new:guest-x'), ('keep-file','keep',None)]:
+                    Path(self.files.name, media_id).write_bytes(b'image')
+                    cursor.execute("INSERT INTO media (id,post_id,draft_id,kind,name,mime,path,size) VALUES (%s,%s,%s,'image','사진','image/png',%s,5)", (media_id,post_id,draft_id,media_id))
+        wait_for_schema(self.app, attempts=1)
+        wait_for_schema(self.app, attempts=1)
+        with self.app.app_context():
+            with get_db().cursor() as cursor:
+                cursor.execute("SELECT id FROM posts WHERE id IN ('req','keep')")
+                self.assertEqual([row['id'] for row in cursor.fetchall()], ['keep'])
+                cursor.execute("SELECT id FROM drafts WHERE id IN ('request:new:0026','cake:new:guest-x','cake:new:0026')")
+                self.assertEqual([row['id'] for row in cursor.fetchall()], ['cake:new:0026'])
+                cursor.execute("SHOW COLUMNS FROM posts LIKE 'owner'")
+                self.assertIsNone(cursor.fetchone())
+                cursor.execute("SHOW COLUMNS FROM drafts LIKE 'guest'")
+                self.assertIsNone(cursor.fetchone())
+                cursor.execute("SHOW COLUMNS FROM posts LIKE 'board'")
+                self.assertEqual(cursor.fetchone()['Type'], "enum('cake','notice')")
+        self.assertEqual([p.name for p in Path(self.files.name).glob('*-file')], ['keep-file'])
 
 
 if __name__ == '__main__':

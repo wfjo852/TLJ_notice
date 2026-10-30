@@ -1,7 +1,7 @@
 from flask import Blueprint, abort, current_app, request, send_from_directory
 
 from db import get_db
-from identity import current_member, is_guest_request, peek_guest_owner_id
+from identity import current_member, is_guest_request
 from permissions import can_read
 
 media_bp = Blueprint('media', __name__)
@@ -9,8 +9,7 @@ media_bp = Blueprint('media', __name__)
 
 def _own_draft(draft_id, guest=False):
     member = None if guest else current_member()
-    identity = member['id'] if member else f'guest-{peek_guest_owner_id()}'
-    return draft_id.endswith(f':{identity}')
+    return bool(member) and draft_id.endswith(f':{member["id"]}')
 
 
 @media_bp.get('/media/<media_id>')

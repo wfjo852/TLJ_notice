@@ -24,21 +24,17 @@ class ScopeRulesTest(unittest.TestCase):
                         user={'id':'1111','permissions':permissions}
                         for author in ['1111','2222',None]:
                             with self.subTest(board=board, action=action, own=own, others=others, author=author):
-                                post={'board':board,'member':author,'owner':None}
-                                self.assertEqual(check(user,post,False,None),others or (own and author=='1111'))
-                                self.assertFalse(check(None,post,False,None))
+                                post={'board':board,'member':author}
+                                self.assertEqual(check(user,post),others or (own and author=='1111'))
+                                self.assertFalse(check(None,post))
 
-    def test_legacy_permissions_and_guest(self):
-        values=permissions_for({'permissions':{'cake':{'edit':True,'delete':False},'request':{'edit':False,'delete':True}}})
+    def test_legacy_permissions(self):
+        values=permissions_for({'permissions':{'cake':{'edit':True,'delete':False},'notice':{'edit':False,'delete':True},'request':{'write':True}}})
         self.assertTrue(values['cake']['editOwn']);self.assertTrue(values['cake']['editOthers'])
-        self.assertFalse(values['cake']['deleteOwn']);self.assertFalse(values['request']['editOthers'])
-        values=permissions_for({'permissions':{'request':{'edit':True,'editOwn':True,'editOthers':False}}})
-        self.assertFalse(values['request']['editOthers'])
-        for check in [can_edit,can_delete]:
-            post={'board':'request','member':None,'owner':'guest-token'}
-            self.assertTrue(check(None,post,True,'guest-token'))
-            self.assertFalse(check(None,post,True,'other-token'))
-            self.assertFalse(check(None,{**post,'owner':None},True,None))
+        self.assertFalse(values['cake']['deleteOwn']);self.assertFalse(values['notice']['editOthers'])
+        self.assertNotIn('request',values)
+        values=permissions_for({'permissions':{'notice':{'edit':True,'editOwn':True,'editOthers':False}}})
+        self.assertFalse(values['notice']['editOthers'])
 
 
 class ScopeApiTest(unittest.TestCase):
@@ -59,6 +55,11 @@ class ScopeApiTest(unittest.TestCase):
         self.assertEqual(admin.post('/api/auth/login',json={'id':'0026'}).status_code,200)
         user=self.app.test_client()
         self.assertEqual(user.post('/api/auth/register',json={'id':'1111','name':'내 글 테스트'}).status_code,201)
+        guest=self.app.test_client()
+        for board in BOARDS:
+            self.assertEqual(guest.post('/api/posts',headers={'X-TLJ-Guest':'1'},json={'board':board,'title':'비회원','body':'내용'}).status_code,403)
+            self.assertEqual(guest.put(f'/api/drafts/{board}/new',json={'title':'비회원'}).status_code,401)
+        self.assertEqual(user.post('/api/posts',json={'board':'request','title':'요청','body':'내용'}).status_code,404)
         permissions=default_permissions()
         for key in BOARDS:
             permissions[key].update(write=True,editOwn=True,editOthers=False,deleteOwn=True,deleteOthers=False)
@@ -87,19 +88,19 @@ class ScopeApiTest(unittest.TestCase):
             self.assertEqual(user.put('/api/posts/'+other,json={'title':'전체 수정','body':'허용'}).status_code,200)
             self.assertEqual(user.delete('/api/posts/'+other).status_code,204)
         # Write permission does not imply permission to edit/delete the new post.
-        permissions['request'].update(editOwn=False,editOthers=False,deleteOwn=False,deleteOthers=False)
+        permissions['notice'].update(editOwn=False,editOthers=False,deleteOwn=False,deleteOthers=False)
         admin.put('/api/users/1111',json={'name':'내 글 테스트','permissions':permissions})
-        created=user.post('/api/posts',json={'board':'request','title':'작성 전용','body':'내용'})
+        created=user.post('/api/posts',json={'board':'notice','title':'작성 전용','body':'내용'})
         self.assertFalse(created.json['canEdit']);self.assertFalse(created.json['canDelete'])
         bad={**permissions,'cake':{'read':True}}
         self.assertEqual(admin.put('/api/users/1111',json={'name':'테스트','permissions':bad}).status_code,400)
         self.assertEqual(user.put('/api/users/1111',json={'name':'테스트','permissions':permissions}).status_code,403)
         with self.app.app_context():
             with get_db().cursor() as cursor:
-                cursor.execute('UPDATE members SET permissions=%s WHERE id=%s',(json.dumps({'request':{'edit':True,'delete':False}}),'1111'))
+                cursor.execute('UPDATE members SET permissions=%s WHERE id=%s',(json.dumps({'notice':{'edit':True,'delete':False}}),'1111'))
         record=next(row for row in admin.get('/api/users').json if row['id']=='1111')
-        self.assertTrue(record['permissions']['request']['editOthers'])
-        self.assertFalse(record['permissions']['request']['deleteOwn'])
+        self.assertTrue(record['permissions']['notice']['editOthers'])
+        self.assertFalse(record['permissions']['notice']['deleteOwn'])
 
 
 if __name__=='__main__': unittest.main(verbosity=2)

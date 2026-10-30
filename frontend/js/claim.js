@@ -126,9 +126,6 @@ async function initList() {
   await refreshIdentity();
   if (!guestMode && !currentMember()) { loginForCurrentPage(); return; }
   $('appShell').hidden = false;
-  if ($('usersLink')) $('usersLink').hidden = !isUserAdmin();
-  $('account').textContent = guestMode ? '비회원 모드 · 회원 로그인' : `${currentMember().name} · 로그아웃`;
-  $('account').onclick = () => { if (guestMode) { location.href = 'login.html'; return; } logout(); };
   $('search').oninput = renderClaims;
   $('newClaim').onclick = openClaimForm;
   $('claimForm').onsubmit = submitClaim;
