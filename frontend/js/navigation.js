@@ -67,10 +67,20 @@ function buildLayout() {
   sidebar.querySelector('nav').after(accountSlot);
   let opened = false;
 
+  // On wide screens the toggle hides/shows the sidebar and the choice is remembered per browser.
+  function setHidden(value) {
+    document.body.classList.toggle('menu-hidden', value);
+    toggle.setAttribute('aria-expanded', String(!value));
+    toggle.setAttribute('aria-label', value ? '메뉴 열기' : '메뉴 숨기기');
+    try { localStorage.setItem('tlj-menu-hidden', value ? '1' : ''); } catch {}
+  }
+  try { document.body.classList.toggle('menu-hidden', localStorage.getItem('tlj-menu-hidden') === '1'); } catch {}
+
   function setOpen(value, restoreFocus = true) {
     opened = mobile.matches && value;
     document.body.classList.toggle('menu-open', opened);
-    toggle.setAttribute('aria-expanded', String(opened));
+    toggle.setAttribute('aria-expanded', String(mobile.matches ? opened : !document.body.classList.contains('menu-hidden')));
+    if (!mobile.matches) toggle.setAttribute('aria-label', document.body.classList.contains('menu-hidden') ? '메뉴 열기' : '메뉴 숨기기');
     backdrop.hidden = !opened;
     workspace.inert = opened;
     sidebar.inert = mobile.matches && !opened;
@@ -97,7 +107,7 @@ function buildLayout() {
     if (!mobile.matches && document.activeElement === close) sidebar.querySelector('a')?.focus();
   }
 
-  toggle.onclick = () => setOpen(!opened);
+  toggle.onclick = () => mobile.matches ? setOpen(!opened) : setHidden(!document.body.classList.contains('menu-hidden'));
   close.onclick = () => setOpen(false);
   backdrop.onclick = () => setOpen(false);
   sidebar.addEventListener('click', event => {
