@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, redirect
 
 import db as db_module
 from config import Config
@@ -35,7 +35,7 @@ def create_app():
 
     @app.route('/')
     def index():
-        return app.send_static_file('index.html')
+        return redirect('/guest-cake.html')
 
     return app
 
