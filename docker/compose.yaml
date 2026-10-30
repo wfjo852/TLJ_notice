@@ -39,6 +39,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      # 소스 코드를 직접 연결합니다. 화면(frontend)은 새로고침만, 서버(backend)는 `restart web`만 하면 반영됩니다.
+      # requirements.txt를 바꿨을 때만 --build가 필요합니다.
+      - ../backend:/app/backend
+      - ../frontend:/app/frontend
       # 공지사항 이미지/동영상. 컨테이너는 UID 10001로 실행되므로 호스트 폴더 소유자도 10001이어야 합니다.
       - ./uploads:/app/backend/uploads
     restart: unless-stopped

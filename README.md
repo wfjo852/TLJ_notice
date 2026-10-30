@@ -16,6 +16,8 @@ Docker가 실행된 환경에서, 저장소 루트에서:
 docker compose -f docker/compose.yaml up --build -d
 ```
 
+`backend`와 `frontend` 폴더는 컨테이너에 바인드 마운트되므로 코드를 바꿀 때마다 다시 빌드할 필요가 없습니다. 화면(`frontend`) 변경은 브라우저 새로고침만, 서버(`backend`) 변경은 `docker compose -f docker/compose.yaml restart web`만 하면 반영됩니다. `backend/requirements.txt`를 바꿨을 때만 `--build`가 필요합니다. `./server.sh`에서도 실행·중지·재시작·다시 빌드를 고를 수 있습니다.
+
 회원용: http://localhost:8000/ (로그인 필수). 비회원용: http://localhost:8000/guest.html (비회원 케이크 생산 페이지로 이동). 종료는 `docker compose -f docker/compose.yaml down`을 사용합니다. `-v`를 추가해도 호스트의 `docker/DB` 폴더는 삭제되지 않지만 다른 Docker 볼륨은 삭제되므로 주의하세요.
 
 `web` 서비스는 MySQL(`db` 서비스)이 준비될 때까지 기다렸다가 시작하며, 시작 시 필요한 테이블을 자동으로 만듭니다(`backend/schema.sql`). 게시글 DB는 호스트의 `docker/DB` 폴더에 상대경로 바인드 마운트로 저장됩니다. 첨부파일은 `uploads` 볼륨(`/app/backend/uploads`)에 저장되어 컨테이너를 다시 만들어도 유지됩니다. `docker/DB`는 Git에 포함되지 않습니다. 기존 `db-data` 볼륨을 사용하던 Windows 서버에서는 파일을 직접 복사하면 MySQL의 대소문자 설정이 달라져 시작하지 못할 수 있으므로, SQL 덤프를 새 `docker/DB`의 MySQL에 복원한 다음 Compose 설정을 적용해야 합니다.
