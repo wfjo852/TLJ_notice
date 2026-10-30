@@ -34,8 +34,7 @@ async function loadPos() {
   renderPos();
 }
 
-// Grid cells show only the image (name as fallback) with the price below; the product list also shows the name.
-function productFace(product, holder, withName = true) {
+function productFace(product, holder) {
   if (product.image) {
     const img = el('img');
     img.src = product.image;
@@ -43,7 +42,7 @@ function productFace(product, holder, withName = true) {
     img.loading = 'lazy';
     holder.append(img);
   }
-  if (withName || !product.image) holder.append(el('b', '', product.name));
+  holder.append(el('b', '', product.name));
   holder.append(el('span', 'price', won(product.price)));
 }
 
@@ -80,7 +79,7 @@ function renderGrid() {
     const placed = cellAt(cat, posPage, slot);
     const product = placed && productById(placed[2]);
     if (product) {
-      productFace(product, cell, false);
+      productFace(product, cell);
       cell.title = product.name;
       cell.setAttribute('aria-label', `${product.name} ${won(product.price)}`);
       if (selected?.categoryId === cat.id && selected.page === posPage && selected.slot === slot) cell.classList.add('selected');
@@ -127,7 +126,7 @@ function renderSelection() {
     if (product.content) info.append(el('p', 'memo', product.content));
   }
   $('detailBtn').disabled = !product?.prodNum;
-  $('editProduct').disabled = !product;
+  if ($('editProduct')) $('editProduct').disabled = !product;
   $('unplace').disabled = selected?.slot == null;
 }
 
@@ -149,7 +148,7 @@ function renderPool() {
     const count = pos.categories.filter(c => c.cells.some(x => x[2] === product.id)).length;
     item.append(el('small', 'muted', count ? `분류 ${count}곳` : '미배치'));
     item.ondragstart = event => { dragging = { productId: product.id, slot: null }; event.dataTransfer.effectAllowed = 'copy'; };
-    item.onclick = () => { selected = selected?.slot == null && selected.productId === product.id ? null : { productId: product.id, slot: null }; renderPos(); };
+    item.onclick = () => { selected = selected && selected.slot == null && selected.productId === product.id ? null : { productId: product.id, slot: null }; renderPos(); };
     item.onkeydown = event => { if (event.key === 'Enter') item.click(); };
     list.append(item);
   }

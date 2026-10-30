@@ -1,13 +1,13 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>포스 교육 · TLJ</title><link rel="stylesheet" href="style.css"><script defer src="js/common.js"></script><script defer src="js/navigation.js"></script><script defer src="js/pos.js"></script></head><body data-mode="guest" data-page="pos"><main class="standalone-main pos-main">
 <div class="pos">
-<div class="pos-top"><div class="pos-sections"><button type="button" data-section="bread" aria-pressed="true">빵</button><button type="button" data-section="sandwich" aria-pressed="false">샌드위치/샐러드</button></div><div class="pos-actions"><button type="button" id="addProduct" class="secondary pos-edit">＋ 제품 추가</button><button type="button" id="editToggle" class="secondary" aria-pressed="false" hidden>편집</button></div></div>
+<div class="pos-top"><div class="pos-sections"><button type="button" data-section="bread" aria-pressed="true">빵</button><button type="button" data-section="sandwich" aria-pressed="false">샌드위치/샐러드</button></div><button type="button" id="editToggle" class="secondary" aria-pressed="false" hidden>편집</button></div>
 <div class="pos-body">
 <aside class="pos-cats"><div id="cats"></div><button type="button" id="addCat" class="secondary pos-edit">＋ 분류 추가</button></aside>
 <section class="pos-grid-wrap"><div id="grid" class="pos-grid"></div>
 <div class="pos-pager"><button type="button" id="prevPage" class="secondary" aria-label="이전 페이지">◀</button><span id="pageInfo">1 / 1</span><button type="button" id="nextPage" class="secondary" aria-label="다음 페이지">▶</button><button type="button" id="addPage" class="quiet pos-edit">＋ 페이지</button><button type="button" id="removePage" class="quiet pos-edit">− 현재 페이지</button></div>
 <p class="muted pos-edit">제품을 끌어다 놓거나, 제품을 선택한 뒤 빈 칸을 누르면 배치됩니다. 제품끼리 끌어 놓으면 자리가 바뀝니다.</p></section>
 </div>
-<div class="pos-bottom"><div id="selInfo"></div><div class="pos-actions"><button type="button" id="unplace" class="quiet pos-edit">칸 비우기</button><button type="button" id="editProduct" class="secondary pos-edit">제품 수정</button><button type="button" id="detailBtn" class="primary" disabled>상세보기</button></div></div>
+<div class="pos-bottom"><div id="selInfo"></div><div class="pos-actions"><button type="button" id="unplace" class="quiet pos-edit">칸 비우기</button><button type="button" id="detailBtn" class="primary" disabled>상세보기</button></div></div>
 </div>
 </main>
 <div id="toast" role="status" hidden></div></body></html>
